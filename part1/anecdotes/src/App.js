@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import {useEffect, useState} from 'react'
 
 const App = () => {
   const anecdotes = [
@@ -12,10 +12,52 @@ const App = () => {
   ]
 
   const [selected, setSelected] = useState(0)
+  const [votes, setVotes] = useState(Array(anecdotes.length).fill(0));
+  const [max, setMax] = useState(0);
+
+
+  const handleClick = (e) => {
+      // e.preventDefault()
+    setSelected(Math.floor(Math.random() * anecdotes.length));
+  }
+
+  const handleVote = (e) => {
+      // e.preventDefault()
+    const newArr = [...votes];
+    newArr[selected] += 1;
+    setVotes(newArr);
+    // setMax(findMaxIndex(newArr));
+  }
+
+  useEffect(() => {
+    setMax(findMaxIndex(votes));
+  }, [votes]);
+
+  const findMaxIndex = (arr) => {
+    let count = 0;
+    let maxIndex = 0;
+    let max = arr[0];
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i] > max) {
+        max = arr[i];
+        maxIndex = i;
+      }
+    }
+    return maxIndex;
+  }
 
   return (
       <div>
-        {anecdotes[selected]}
+        <h1>Anecdote of the day</h1>
+        <p>{anecdotes[selected]}</p>
+        <p>has {votes[selected]} votes</p>
+
+        <button onClick={handleVote}>Vote</button>
+        <button onClick={handleClick}>Next</button>
+
+        <h2>Anecdote with most votes</h2>
+        <p>{anecdotes[max]}</p>
+        <p>has {votes[max]} votes</p>
       </div>
   )
 }
