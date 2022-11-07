@@ -16,22 +16,17 @@ const App = () => {
   const [max, setMax] = useState(0);
 
 
-  const handleClick = (e) => {
-      // e.preventDefault()
+  const handleClick = () => {
     setSelected(Math.floor(Math.random() * anecdotes.length));
   }
 
-  const handleVote = (e) => {
-      // e.preventDefault()
+  const handleVote = () => {
     const newArr = [...votes];
     newArr[selected] += 1;
     setVotes(newArr);
-    // setMax(findMaxIndex(newArr));
+    setMax(findMaxIndex(newArr));
   }
 
-  useEffect(() => {
-    setMax(findMaxIndex(votes));
-  }, [votes]);
 
   const findMaxIndex = (arr) => {
     let count = 0;
