@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import { useState} from 'react'
 
 const App = () => {
   const anecdotes = [
@@ -29,7 +29,6 @@ const App = () => {
 
 
   const findMaxIndex = (arr) => {
-    let count = 0;
     let maxIndex = 0;
     let max = arr[0];
     for (let i = 0; i < arr.length; i++) {
