@@ -1,7 +1,8 @@
 import {PhoneNumber} from "./PhoneNumber";
 
 export function NumberList({search, persons}) {
-    return <ul style={{listStyle: "none", paddingLeft: 0}}>
+    return (
+    <ul style={{listStyle: "none", paddingLeft: 0}}>
         {persons.filter(person => {
           if (search === "") {
             return true;
@@ -10,6 +11,7 @@ export function NumberList({search, persons}) {
           }
         })
             .map(person => <PhoneNumber key={person.name} person={person} />)}
-    </ul>;
+    </ul>
+);
 }
 
