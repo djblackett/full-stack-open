@@ -19,12 +19,15 @@ const App = () => {
   const deleteNumber = async (id) => {
     const person = persons.find(person => person.id === id);
     try {
-    if (window.confirm(`Delete ${person.name}?`)) {
-      const res = await phoneNumberService.remove(id);
-      setPersons(persons.filter(person => person.id !== id));
-    }} catch(error) {
+      if (window.confirm(`Delete ${person.name}?`)) {
+        await phoneNumberService.remove(id);
+        setPersons(persons.filter(person => person.id !== id));
+      }
+    } catch (error) {
       setErrorMessage(`${person.name} was already removed from the server`);
-      setTimeout(() => {          setErrorMessage(null)        }, 5000);
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000);
       setPersons(persons.filter(p => p.id !== person.id));
     }
   }
@@ -40,7 +43,7 @@ const App = () => {
     }
   }
 
-  useEffect( () => {
+  useEffect(() => {
 
     async function fetchPersons() {
       let response;
@@ -52,67 +55,56 @@ const App = () => {
       }
     }
 
-   fetchPersons().then( response => {
-     setPersons(response);
-     setLoading(false);
-   })
-  },[])
+    fetchPersons().then(response => {
+      setPersons(response);
+      setLoading(false);
+    })
+  }, [])
 
 
-  // checks for object equality by value instead of reference
-  function containsObject(obj, list) {
-    for (let x of list) {
-      if (JSON.stringify(x) === JSON.stringify(obj)) {
-        return true;
-      }
+  // handles both updating and adding a new number
+  const addPhoneNumber = async (e) => {
+    e.preventDefault();
+    if (persons.find(person => person.name === newName)) {
+      await updateNumber();
+    } else {
+      const res = await phoneNumberService.create({name: newName, number: newNumber});
+      setPersons([...persons, res]);
+      setSuccessMessage(`Added ${newName}`);
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+      setNewName("");
+      setNewNumber("");
     }
-    return false;
   }
 
-    // handles both updating and adding a new number
-    const addPhoneNumber = async (e) => {
-      e.preventDefault();
-      if (persons.find(person => person.name === newName)) {
-        await updateNumber();
-      }
-      else {
-        const res = await phoneNumberService.create({name: newName, number: newNumber});
-        setPersons([...persons, res]);
-        setSuccessMessage(`Added ${newName}`);
-        setTimeout(() => {
-          setSuccessMessage(null);
-          }, 5000);
-        setNewName("");
-        setNewNumber("");
-
-      }
-    }
-
-    const handleNumberChange = (e) => {
+  const handleNumberChange = (e) => {
     setNewNumber(e.target.value);
-    }
+  }
 
-    const handleNameChange = (e) => {
-      setNewName(e.target.value);
-    }
+  const handleNameChange = (e) => {
+    setNewName(e.target.value);
+  }
 
-    const handleSearchChange = (e) => {
+  const handleSearchChange = (e) => {
     setSearch(e.target.value);
-    }
+  }
 
   return (
       <div>
         <h2>Phonebook</h2>
-        <SuccessNotification message={successMessage} />
+        <SuccessNotification message={successMessage}/>
         <Search value={search} onChange={handleSearchChange}/>
-        <Form newName={newName} onChange={handleNameChange} newNumber={newNumber} handleNumberChange={handleNumberChange}
+        <Form newName={newName} onChange={handleNameChange} newNumber={newNumber}
+              handleNumberChange={handleNumberChange}
               handleClick={addPhoneNumber}/>
         <h2>Numbers</h2>
-        <ErrorNotification message={errorMessage} />
+        <ErrorNotification message={errorMessage}/>
         {isLoading && <p>Loading...</p>}
         {!isLoading &&
-            <NumberList persons={persons} search={search} deleteNumber={deleteNumber} />
-          }
+            <NumberList persons={persons} search={search} deleteNumber={deleteNumber}/>
+        }
       </div>
   );
 }
