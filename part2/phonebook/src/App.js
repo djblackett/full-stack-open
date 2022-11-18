@@ -37,6 +37,7 @@ const App = () => {
       const person = persons.find(person => person.name === newName);
       await phoneNumberService.update(person.id, {...person, number: newNumber});
       setPersons(persons.filter(p => p.id !== person.id).concat({...person, number: newNumber}));
+      console.log("did i get here?")
       setNewNumber("");
       setNewName("");
       console.log("updated")
