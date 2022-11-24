@@ -15,6 +15,7 @@ const App = () => {
   const [isLoading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [messageColor, setMessageColor] = useState("green");
 
   const deleteNumber = async (id) => {
     const person = persons.find(person => person.id === id);
@@ -35,12 +36,21 @@ const App = () => {
   const updateNumber = async () => {
     if (window.confirm(`${newName} is already in the phonebook. Replace their number with the new one?`)) {
       const person = persons.find(person => person.name === newName);
-      await phoneNumberService.update(person.id, {...person, number: newNumber});
-      setPersons(persons.filter(p => p.id !== person.id).concat({...person, number: newNumber}));
-      console.log("did i get here?")
-      setNewNumber("");
-      setNewName("");
-      console.log("updated")
+      phoneNumberService.update(person.id, {...person, number: newNumber}).then(result => {
+        setPersons(persons.filter(p => p.id !== person.id).concat({...person, number: newNumber}));
+        console.log("did i get here?")
+        setNewNumber("");
+        setNewName("");
+        console.log("updated")
+      })
+          .catch(error => {
+            setMessageColor("red");
+            setSuccessMessage(error.response.data.error);
+            setTimeout(() => {
+              setSuccessMessage(null);
+              setMessageColor("green");
+            }, 5000);
+          })
     }
   }
 
@@ -69,14 +79,26 @@ const App = () => {
     if (persons.find(person => person.name === newName)) {
       await updateNumber();
     } else {
-      const res = await phoneNumberService.create({name: newName, number: newNumber});
-      setPersons([...persons, res]);
-      setSuccessMessage(`Added ${newName}`);
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 5000);
-      setNewName("");
-      setNewNumber("");
+
+      phoneNumberService.create({name: newName, number: newNumber}).then((result) => {
+        setPersons([...persons, result]);
+
+        setSuccessMessage(`Added ${newName}`);
+
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 5000);
+        setNewName("");
+        setNewNumber("");
+      })
+          .catch(error => {
+            setMessageColor("red");
+            setSuccessMessage(error.response.data.error);
+            setTimeout(() => {
+              setSuccessMessage(null);
+              setMessageColor("green");
+            }, 5000);
+          })
     }
   }
 
@@ -95,7 +117,7 @@ const App = () => {
   return (
       <div>
         <h2>Phonebook</h2>
-        <SuccessNotification message={successMessage}/>
+        <SuccessNotification message={successMessage} messageColor={messageColor}/>
         <Search value={search} onChange={handleSearchChange}/>
         <Form newName={newName} onChange={handleNameChange} newNumber={newNumber}
               handleNumberChange={handleNumberChange}
