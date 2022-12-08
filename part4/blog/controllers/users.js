@@ -10,7 +10,11 @@ usersRouter.get("/", async (request, response) => {
 });
 
 usersRouter.get("/:id", async (request, response) => {
-  const user = await User.find({ id: request.params.id });
+  const user = await User.findById(request.params.id);
+  if (!user) {
+    response.status(404).send({ error: "User not found" });
+    return;
+  }
   response.json(user);
 });
 
@@ -42,8 +46,6 @@ usersRouter.post("/", async (request, response) => {
     name: body.name,
     username: body.username,
   };
-
-
 
   bcrypt.genSalt(10,function(err,salt){
     bcrypt.hash(password, salt, async function (err, hash) {

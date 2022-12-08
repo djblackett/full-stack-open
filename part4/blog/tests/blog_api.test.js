@@ -2,8 +2,12 @@ const mongoose = require("mongoose");
 const supertest = require("supertest");
 const app = require("../app");
 const Blog = require("../models/blog");
+const User = require("../models/user");
+const api = supertest.agent(app);
+require("jest-expect-message");
+const jwt = require("jsonwebtoken");
 
-const api = supertest(app);
+
 
 const initialBlogs = [
   {
@@ -20,25 +24,60 @@ const initialBlogs = [
   },
 ];
 
+// password hashing will be tested in login tests
+const initialUser = {
+  name: "Morpheus",
+  username: "morphDude76",
+  passwordHash: "password123"
+};
+
+
+
+
+// api.auth(response.accessToken, { type: "bearer" });
+// const token = jwt.sign(userForToken, process.env.SECRET);
+let token = "";
+let globalUser = "";
+
 
 
 beforeEach(async () => {
 
   await Blog.deleteMany({});
+  await User.deleteMany({});
 
-  const blogObjects = initialBlogs.map(blog => new Blog(blog));
+  const user = await new User(initialUser).save();
+
+  // add current user to test data
+  const userAdded = initialBlogs.map(blog => {
+
+    return { ...blog, user: user._id };
+  });
+
+  const blogObjects = userAdded.map(blog => new Blog(blog));
   const promiseArray = blogObjects.map(blog => blog.save());
   await Promise.all(promiseArray);
+
+  globalUser = user;
+  const userForToken = {
+    username: user.username,
+    id: user._id,
+  };
+
+  token = jwt.sign(userForToken, process.env.SECRET);
+  // add auth header to all requests
+  api.auth(token, { type: "bearer" });
 }, 100000);
 
 
-describe("When some initial notes are already saved", () => {
+describe("When some initial blogs are already saved", () => {
 
   test("blogs are returned as json", async () => {
-    await api
-      .get("/api/blogs")
-      .expect(200)
-      .expect("Content-Type", /application\/json/);
+    const response = await api
+      .get("/api/blogs");
+
+    expect(response.status).toBe(200);
+    expect("Content-Type", /application\/json/);
   }, 100000);
 
   test("two blogs are returned", async () => {
@@ -55,31 +94,31 @@ describe("adds a valid formatted blog to database", () => {
     const response = await api.get("/api/blogs");
     const blog = response.body[0];
     expect(blog.id).toBeDefined();
-    // console.log(response.data);
   });
 
   test("successfully adds one blog to database", async () => {
     const sample = {
       title: "I am a new blog being added to the database",
-      author: "Mister Tester Man",
       url: "https://bloggityblogblog.org/supercooolblog",
-      likes: "69"
     };
 
-    const newBlog = new Blog(sample);
-    const postResult = await newBlog.save();
+    const post = await api.post("/api/blogs").send(sample);
+    const postResult = post.body;
     const getResult = await api.get("/api/blogs");
 
     expect(getResult.body).toHaveLength(3);
     expect(postResult.title).toBe(sample.title);
-    expect(postResult.author).toBe(sample.author);
+    expect(postResult.author).toBe(globalUser.name);
     expect(postResult.url).toBe(sample.url);
-    expect(postResult.likes).toBe(Number(sample.likes));
+    expect(postResult.likes).toBe(0);
   });
 
 
 
+
   test("Adding a blog without likes value defaults to 0", async () => {
+
+    //todo use the api endpoint
     const sample = {
       title:"I am a new blog being added to the database",
       author:"Mister Tester Man",

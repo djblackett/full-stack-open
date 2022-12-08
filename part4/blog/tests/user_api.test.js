@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const supertest = require("supertest");
 const app = require("../app");
 const User = require("../models/user");
+const bcrypt = require("bcryptjs");
 
 
 const api = supertest(app);
@@ -17,13 +18,28 @@ const initialUsers = [
   },
 ];
 
+const usersWithHash = [{ ...initialUsers[0] }, { ...initialUsers[1] }];
+
+
+
+
 beforeEach(async () => {
 
   await User.deleteMany({});
 
-  const userObjects = initialUsers.map(user => new User(user));
+  const user1Hash = await bcrypt.hash(initialUsers[0].password, 10);
+  const user2Hash = await bcrypt.hash(initialUsers[1].password, 10);
+
+  usersWithHash[0].passwordHash = user1Hash;
+  delete usersWithHash[0].password;
+  usersWithHash[1].passwordHash = user2Hash;
+  delete usersWithHash[1].password;
+
+
+  const userObjects = usersWithHash.map(user => new User(user));
   const promiseArray = userObjects.map(user => user.save());
   await Promise.all(promiseArray);
+
 }, 100000);
 
 

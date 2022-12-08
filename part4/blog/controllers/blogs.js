@@ -1,14 +1,5 @@
 const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
-const User = require("../models/user");
-const jwt = require("jsonwebtoken");
-
-const getTokenFrom = request => {  const authorization = request.get("authorization");
-  if (authorization && authorization.toLowerCase().startsWith("bearer ")) {
-    return authorization.substring(7);
-  }
-  return null;
-};
 
 
 blogsRouter.get("/", async (request, response) => {
@@ -17,29 +8,26 @@ blogsRouter.get("/", async (request, response) => {
 });
 
 blogsRouter.get("/:id", async (request, response) => {
-  const blog = await Blog.find({ id: request.params.id });
-  response.json(blog);
+  const blog = await Blog.findById(request.params.id);
+  if (blog) {
+    response.json(blog);
+  } else {
+    response.sendStatus(404);
+  }
 });
 
 blogsRouter.post("/", async (request, response) => {
 
   const body = request.body;
-  console.log(body);
 
-  const token = getTokenFrom(request);
-  const decodedToken = jwt.verify(token, process.env.SECRET);
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: "token missing or invalid" });
-  }
-  const user = await User.findById(decodedToken.id);
-  // const user = await User.findById(body.userId);
+  const user = request.user;
 
   const blogObj = {
     name: body.name,
     title: body.title,
-    author: body.author,
+    author: user.name,
     url: body.url,
-    user: user._id
+    user: user.id
   };
 
   const blog = new Blog(blogObj);
@@ -52,9 +40,26 @@ blogsRouter.post("/", async (request, response) => {
 });
 
 blogsRouter.delete("/:id", async (request, response) => {
+
+  const user = request.user;
+
+  // this shouldn't be possible to do from the front end, but for the sake of backend testing...
+  if (!user) {
+    response.send({ error: "user not found" });
+    return;
+  }
+
   const id = String(request.params.id);
-  await Blog.findByIdAndRemove({ _id: String(id) });
-  response.status(204).end();
+  const blog = await Blog.findById(id);
+  console.log(blog);
+
+  if (blog.user.toString() === String(user.id)) {
+    await Blog.findByIdAndRemove(String(id));
+    response.status(204).end();
+  } else {
+    response.status(401).send({ error: "You can only delete your own blog posts" });
+  }
+
 
 });
 
