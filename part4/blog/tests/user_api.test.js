@@ -20,9 +20,6 @@ const initialUsers = [
 
 const usersWithHash = [{ ...initialUsers[0] }, { ...initialUsers[1] }];
 
-
-
-
 beforeEach(async () => {
 
   await User.deleteMany({});
@@ -35,11 +32,9 @@ beforeEach(async () => {
   usersWithHash[1].passwordHash = user2Hash;
   delete usersWithHash[1].password;
 
-
   const userObjects = usersWithHash.map(user => new User(user));
   const promiseArray = userObjects.map(user => user.save());
   await Promise.all(promiseArray);
-
 }, 100000);
 
 
@@ -51,6 +46,7 @@ describe("testing user database", () => {
       .expect(200)
       .expect("Content-Type", /application\/json/);
   }, 100000);
+
 
   test("two users are returned", async () => {
     const response = await api.get("/api/users");
@@ -70,32 +66,19 @@ describe("adds a valid formatted user to database", () => {
 
   test("successfully adds one user to database", async () => {
     const sample = {
+      name: "Mr. Anderson",
       username: "Neo",
       password: "iAmTheOne"
     };
 
-    const newUser = new User(sample);
-    const postResult = await newUser.save();
+    const postResult = await api.post("/api/users").send(sample);
     const getResult = await api.get("/api/users");
 
     expect(getResult.body).toHaveLength(3);
-    expect(postResult.username).toBe(sample.username);
-    expect(postResult.password).toBe(sample.password);
+    expect(postResult.body.username).toBe(sample.username);
+    expect(postResult.body.name).toBe(sample.name);
   });
 
-
-
-  // test("Adding a blog without likes value defaults to 0", async () => {
-  //   const sample = {
-  //     title:"I am a new blog being added to the database",
-  //     author:"Mister Tester Man",
-  //     url:"https://bloggityblogblog.org/supercooolblog"
-  //   };
-  //
-  //   const newUser = new User(sample);
-  //   const postResult = await newUser.save();
-  //   expect(postResult.likes).toBe(0);
-  // });
 
 });
 
@@ -115,36 +98,6 @@ describe("adding an invalid user returns proper error message", () => {
   });
 
 });
-
-
-test("successfully deletes a blog from DB", async () => {
-  const getAllUsers = await api.get("/api/users");
-  const firstBlog = getAllUsers.body[0];
-  const firstBlogId = firstBlog.id;
-
-  await api.delete(`/api/users/${firstBlogId}`);
-
-  const usersAfterDeletion = await api.get("/api/users");
-  const blogUrls = usersAfterDeletion.body.map(blog => blog.url);
-
-  expect(204);
-  expect(usersAfterDeletion.body.length).toBe(initialUsers.length - 1);
-  expect(blogUrls).not.toContain(firstBlog.url);
-});
-
-
-test("Successfully updates a blog", async () => {
-  const getAllUsers = await api.get("/api/users");
-  const firstBlog = getAllUsers.body[0];
-  const firstBlogId = String(firstBlog.id);
-
-  const updated = await api.put(`/api/users/${firstBlogId}`).send({ title: firstBlog.title, url: firstBlog.url, author: firstBlog.author, likes: 12345678 }, { new: true });
-
-  expect(updated.body.likes).toBe(12345678);
-});
-
-
-
 
 afterAll(() => {
   mongoose.connection.close();

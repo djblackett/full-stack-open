@@ -22,8 +22,7 @@ usersRouter.post("/", async (request, response) => {
   const body = request.body;
 
   const usernameResult = await User.find({ username: body.username });
-
-  if (usernameResult) {
+  if (usernameResult.length > 0) {
     response.status(400).send({ error: "Username is already taken" });
     return;
   }
@@ -40,7 +39,6 @@ usersRouter.post("/", async (request, response) => {
     response.status(400).send({ error: "password is required and must be at least 3 characters" });
     return;
   }
-
 
   const userObj = {
     name: body.name,

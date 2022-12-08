@@ -7,7 +7,7 @@ const api = supertest.agent(app);
 require("jest-expect-message");
 const jwt = require("jsonwebtoken");
 
-
+// todo setting the authentication globally may be causing problems, not sure if setting it locally overrides the global
 
 const initialBlogs = [
   {
@@ -24,20 +24,26 @@ const initialBlogs = [
   },
 ];
 
-// password hashing will be tested in login tests
-const initialUser = {
+// password hashing is tested in user tests
+const initialUser1 = {
   name: "Morpheus",
   username: "morphDude76",
   passwordHash: "password123"
 };
 
+const initialUser2 = {
+  name: "Trinity",
+  username: "trinitygal22",
+  passwordHash: "password321"
+};
 
 
+let token1 = "";
+let token2 = "";
+let globalUser1 = "";
 
-// api.auth(response.accessToken, { type: "bearer" });
-// const token = jwt.sign(userForToken, process.env.SECRET);
-let token = "";
-let globalUser = "";
+
+// const badToken = jwt.sign({ username: "Freddy", id: "638f62456d113e7d8b0108a4" }, process.env.SECRET);
 
 
 
@@ -46,27 +52,38 @@ beforeEach(async () => {
   await Blog.deleteMany({});
   await User.deleteMany({});
 
-  const user = await new User(initialUser).save();
+  // save 2 users to test DB
+  const user1 = await new User(initialUser1).save();
+  const user2 = await new User(initialUser2).save();
 
-  // add current user to test data
+  // add user1 as the user field for each blog
   const userAdded = initialBlogs.map(blog => {
-
-    return { ...blog, user: user._id };
+    return { ...blog, user: user1._id };
   });
 
+  // save all blogs to test DB
   const blogObjects = userAdded.map(blog => new Blog(blog));
   const promiseArray = blogObjects.map(blog => blog.save());
   await Promise.all(promiseArray);
 
-  globalUser = user;
-  const userForToken = {
-    username: user.username,
-    id: user._id,
+
+  globalUser1 = user1;
+
+  const userForToken1 = {
+    username: user1.username,
+    id: user1._id,
   };
 
-  token = jwt.sign(userForToken, process.env.SECRET);
+  const userForToken2 = {
+    username: user2.username,
+    id: user2._id,
+  };
+
+  token1 = jwt.sign(userForToken1, process.env.SECRET);
+  token2 = jwt.sign(userForToken2, process.env.SECRET);
+
   // add auth header to all requests
-  api.auth(token, { type: "bearer" });
+  api.auth(token1, { type: "bearer" });
 }, 100000);
 
 
@@ -108,26 +125,21 @@ describe("adds a valid formatted blog to database", () => {
 
     expect(getResult.body).toHaveLength(3);
     expect(postResult.title).toBe(sample.title);
-    expect(postResult.author).toBe(globalUser.name);
+    expect(postResult.author).toBe(globalUser1.name);
     expect(postResult.url).toBe(sample.url);
     expect(postResult.likes).toBe(0);
   });
 
 
-
-
   test("Adding a blog without likes value defaults to 0", async () => {
 
-    //todo use the api endpoint
     const sample = {
       title:"I am a new blog being added to the database",
-      author:"Mister Tester Man",
       url:"https://bloggityblogblog.org/supercooolblog"
     };
 
-    const newBlog = new Blog(sample);
-    const postResult = await newBlog.save();
-    expect(postResult.likes).toBe(0);
+    const newBlog = await api.post("/api/blogs").send(sample);
+    expect(newBlog.body.likes).toBe(0);
   });
 
 });
@@ -136,35 +148,52 @@ describe("adds a valid formatted blog to database", () => {
 describe("adding an invalid blog returns proper error message", () => {
   test("missing title or url returns 400 bad request", async () => {
     const noTitle = {
-      author: "Mister Tester Man with no title",
       url: "https://bloggityblogblog.org/supercooolblog"
     };
 
     const noUrl = {
-      title: "I am a new blog being added to the database without a URL",
-      author: "Mister Tester Man",
+      title: "I am a new blog being added to the database without a URL"
     };
 
-    await api.post("/api/blogs", noTitle).expect(400);
-    await api.post("/api/blogs", noUrl).expect(400);
+    await api.post("/api/blogs").send(noTitle).expect(400);
+    await api.post("/api/blogs").send(noUrl).expect(400);
   });
 
 });
 
+describe("successfully deletes a blog only if user is the blog's creator", () => {
 
-test("successfully deletes a blog from DB", async () => {
-  const getAllBlogs = await api.get("/api/blogs");
-  const firstBlog = getAllBlogs.body[0];
-  const firstBlogId = firstBlog.id;
+  //
+  test("successfully deletes a blog from DB", async () => {
+    const getAllBlogs = await api.get("/api/blogs");
+    const firstBlog = getAllBlogs.body[0];
+    const firstBlogId = firstBlog.id;
 
-  await api.delete(`/api/blogs/${firstBlogId}`);
+    console.log(getAllBlogs.user);
 
-  const blogsAfterDeletion = await api.get("/api/blogs");
-  const blogUrls = blogsAfterDeletion.body.map(blog => blog.url);
+    await api.delete(`/api/blogs/${firstBlogId}`);
 
-  expect(204);
-  expect(blogsAfterDeletion.body.length).toBe(initialBlogs.length - 1);
-  expect(blogUrls).not.toContain(firstBlog.url);
+    const blogsAfterDeletion = await api.get("/api/blogs");
+    const blogUrls = blogsAfterDeletion.body.map(blog => blog.url);
+
+    expect(204);
+    expect(blogsAfterDeletion.body.length).toBe(initialBlogs.length - 1);
+    expect(blogUrls).not.toContain(firstBlog.url);
+  });
+
+  test("cannot delete blog from another user", async() => {
+    const getAllBlogs = await api.get("/api/blogs").set("Authorization", `bearer ${token2}`);
+    const firstBlog = getAllBlogs.body[0];
+    const firstBlogId = firstBlog.id;
+
+    console.log(getAllBlogs.user);
+
+    await api
+      .delete(`/api/blogs/${firstBlogId}`)
+      .set("Authorization", `bearer ${token2}`)
+      .expect(401);
+
+  }, 100000);
 });
 
 
@@ -173,10 +202,25 @@ test("Successfully updates a blog", async () => {
   const firstBlog = getAllBlogs.body[0];
   const firstBlogId = String(firstBlog.id);
 
-  const updated = await api.put(`/api/blogs/${firstBlogId}`).send({ title: firstBlog.title, url: firstBlog.url, author: firstBlog.author, likes: 12345678 }, { new: true });
+  const updated = await api
+    .put(`/api/blogs/${firstBlogId}`)
+    .send({ title: firstBlog.title, url: firstBlog.url, author: firstBlog.author, likes: 12345678 }, { new: true });
 
   expect(updated.body.likes).toBe(12345678);
 });
+
+test("Refuses to update other users' blog", async () => {
+  const getAllBlogs = await api.get("/api/blogs").set("Authorization", `bearer ${token2}`);
+  const firstBlog = getAllBlogs.body[0];
+  const firstBlogId = String(firstBlog.id);
+
+  const updated = await api
+    .put(`/api/blogs/${firstBlogId}`)
+    .set("Authorization", `bearer ${token2}`)
+    .send({ title: firstBlog.title, url: firstBlog.url, author: firstBlog.author, likes: 12345678 }, { new: true });
+
+  expect(updated.status).toBe(401);
+}, 100000);
 
 
 afterAll(() => {
