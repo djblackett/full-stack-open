@@ -20,15 +20,18 @@ blogsRouter.post("/", async (request, response) => {
 
   const body = request.body;
   const user = request.user;
+  console.log(user);
 
   const blogObj = {
-    name: body.name,
     title: body.title,
-    author: user.name,
+    author: body.author,
     url: body.url,
-    user: user.id
+    user: user._id.toString()
   };
 
+  console.log(blogObj);
+
+  console.log(typeof user.id);
   const blog = new Blog(blogObj);
   const result = await blog.save();
   user.blogs = user.blogs.concat(result._id);
@@ -64,18 +67,18 @@ blogsRouter.delete("/:id", async (request, response) => {
 
 
 blogsRouter.put("/:id", async (request, response) => {
-  const user = request.user;
+  // const user = request.user;
   const id = String(request.params.id);
   const body = request.body;
 
-  const blog = await Blog.findById(id);
+  const result = await Blog.findByIdAndUpdate(id, body, {
+    new: true,
+    runValidators: true,
+    context: "query"
+  });
 
-  if (blog.user.toString() === user.id.toString()) {
-    const result = await Blog.findByIdAndUpdate(id, body, { new: true, runValidators: true, context: "query" });
-    response.json(result);
-  } else {
-    response.status(401).send({ error: "You can only modify your own blog posts" });
-  }
+  response.json(result);
+
 });
 
 module.exports = blogsRouter;

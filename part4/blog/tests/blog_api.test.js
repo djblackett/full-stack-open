@@ -7,7 +7,6 @@ const api = supertest.agent(app);
 require("jest-expect-message");
 const jwt = require("jsonwebtoken");
 
-// todo setting the authentication globally may be causing problems, not sure if setting it locally overrides the global
 
 const initialBlogs = [
   {
@@ -24,7 +23,7 @@ const initialBlogs = [
   },
 ];
 
-// password hashing is tested in user tests
+
 const initialUser1 = {
   name: "Morpheus",
   username: "morphDude76",
@@ -40,12 +39,6 @@ const initialUser2 = {
 
 let token1 = "";
 let token2 = "";
-let globalUser1 = "";
-
-
-// const badToken = jwt.sign({ username: "Freddy", id: "638f62456d113e7d8b0108a4" }, process.env.SECRET);
-
-
 
 beforeEach(async () => {
 
@@ -65,9 +58,6 @@ beforeEach(async () => {
   const blogObjects = userAdded.map(blog => new Blog(blog));
   const promiseArray = blogObjects.map(blog => blog.save());
   await Promise.all(promiseArray);
-
-
-  globalUser1 = user1;
 
   const userForToken1 = {
     username: user1.username,
@@ -117,6 +107,7 @@ describe("adds a valid formatted blog to database", () => {
     const sample = {
       title: "I am a new blog being added to the database",
       url: "https://bloggityblogblog.org/supercooolblog",
+      author: "angus"
     };
 
     const post = await api.post("/api/blogs").send(sample);
@@ -125,7 +116,7 @@ describe("adds a valid formatted blog to database", () => {
 
     expect(getResult.body).toHaveLength(3);
     expect(postResult.title).toBe(sample.title);
-    expect(postResult.author).toBe(globalUser1.name);
+    expect(postResult.author).toBe(sample.author);
     expect(postResult.url).toBe(sample.url);
     expect(postResult.likes).toBe(0);
   });
@@ -209,18 +200,19 @@ test("Successfully updates a blog", async () => {
   expect(updated.body.likes).toBe(12345678);
 });
 
-test("Refuses to update other users' blog", async () => {
-  const getAllBlogs = await api.get("/api/blogs").set("Authorization", `bearer ${token2}`);
-  const firstBlog = getAllBlogs.body[0];
-  const firstBlogId = String(firstBlog.id);
-
-  const updated = await api
-    .put(`/api/blogs/${firstBlogId}`)
-    .set("Authorization", `bearer ${token2}`)
-    .send({ title: firstBlog.title, url: firstBlog.url, author: firstBlog.author, likes: 12345678 }, { new: true });
-
-  expect(updated.status).toBe(401);
-}, 100000);
+// This seems to be unnecessary due to part 5 allowing you to update anyone's blog (just the likes)
+// test("Refuses to update other users' blog", async () => {
+//   const getAllBlogs = await api.get("/api/blogs").set("Authorization", `bearer ${token2}`);
+//   const firstBlog = getAllBlogs.body[0];
+//   const firstBlogId = String(firstBlog.id);
+//
+//   const updated = await api
+//     .put(`/api/blogs/${firstBlogId}`)
+//     .set("Authorization", `bearer ${token2}`)
+//     .send({ title: firstBlog.title, url: firstBlog.url, author: firstBlog.author, likes: 12345678 }, { new: true });
+//
+//   expect(updated.status).toBe(401);
+// }, 100000);
 
 
 afterAll(() => {

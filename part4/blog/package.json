@@ -40,5 +40,6 @@
   },
   "jest": {
     "testEnvironment": "node"
-  }
+  },
+  "proxy": "http://localhost:3003"
 }

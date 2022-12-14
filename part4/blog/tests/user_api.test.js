@@ -4,7 +4,6 @@ const app = require("../app");
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 
-
 const api = supertest(app);
 
 const initialUsers = [
@@ -64,6 +63,7 @@ describe("adds a valid formatted user to database", () => {
     expect(user.id).toBeDefined();
   });
 
+
   test("successfully adds one user to database", async () => {
     const sample = {
       name: "Mr. Anderson",
@@ -78,8 +78,6 @@ describe("adds a valid formatted user to database", () => {
     expect(postResult.body.username).toBe(sample.username);
     expect(postResult.body.name).toBe(sample.name);
   });
-
-
 });
 
 
@@ -96,7 +94,6 @@ describe("adding an invalid user returns proper error message", () => {
     await api.post("/api/users").send(noUsername).expect(400);
     await api.post("/api/users").send(noPassword).expect(400);
   });
-
 });
 
 afterAll(() => {
