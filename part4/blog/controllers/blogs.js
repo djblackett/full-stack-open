@@ -36,8 +36,8 @@ blogsRouter.post("/", async (request, response) => {
   const result = await blog.save();
   user.blogs = user.blogs.concat(result._id);
 
-  await user.save();
-
+  const updatedUser = await user.save();
+  console.log(result);
   response.status(201).json(result);
 });
 
@@ -71,12 +71,16 @@ blogsRouter.put("/:id", async (request, response) => {
   const id = String(request.params.id);
   const body = request.body;
 
+  console.log("body from PUT request:");
+  console.log(body);
+
   const result = await Blog.findByIdAndUpdate(id, body, {
     new: true,
     runValidators: true,
     context: "query"
   });
 
+  console.log(result);
   response.json(result);
 
 });
