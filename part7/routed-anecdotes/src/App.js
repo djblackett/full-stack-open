@@ -1,14 +1,16 @@
 import { useState } from 'react'
+import {Route, Routes, Link, useParams, useNavigate} from "react-router-dom";
 
 const Menu = () => {
   const padding = {
     paddingRight: 5
   }
+
   return (
     <div>
-      <a href='#' style={padding}>anecdotes</a>
-      <a href='#' style={padding}>create new</a>
-      <a href='#' style={padding}>about</a>
+      <Link to='/' style={padding}>anecdotes</Link>
+      <Link to='create-new' style={padding}>create new</Link>
+      <Link to='about' style={padding}>about</Link>
     </div>
   )
 }
@@ -17,7 +19,7 @@ const AnecdoteList = ({ anecdotes }) => (
   <div>
     <h2>Anecdotes</h2>
     <ul>
-      {anecdotes.map(anecdote => <li key={anecdote.id} >{anecdote.content}</li>)}
+        {anecdotes.map(anecdote => <li key={anecdote.id} ><Link to={`anecdotes/${anecdote.id}`}>{anecdote.content}</Link></li>)}
     </ul>
   </div>
 )
@@ -49,6 +51,7 @@ const CreateNew = (props) => {
   const [author, setAuthor] = useState('')
   const [info, setInfo] = useState('')
 
+    const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -58,6 +61,16 @@ const CreateNew = (props) => {
       info,
       votes: 0
     })
+      navigate("/");
+    handleNotification();
+  }
+
+  const handleNotification = () => {
+      props.setNotification(`a new anecdote "${content}" created!`);
+
+      setTimeout(() => {
+          props.setNotification("")
+      }, 5000);
   }
 
   return (
@@ -80,7 +93,25 @@ const CreateNew = (props) => {
       </form>
     </div>
   )
+}
 
+const Anecdote = ({ anecdotes, anecdoteById }) => {
+
+    const id = useParams().id;
+    const anecdote = anecdotes.find(anecdote => Number(anecdote.id) === Number(id));
+
+    console.log(id)
+    console.log(anecdotes)
+    console.log(anecdote)
+
+    return (
+        <div>
+            <h2>{`${anecdote.content} by ${anecdote.author}`}</h2>
+            <p>has {anecdote.votes} votes</p>
+            <p>for more info see <a href={`${anecdote.info}`} target="blank">{anecdote.info}</a></p>
+        </div>
+
+    )
 }
 
 const App = () => {
@@ -126,9 +157,13 @@ const App = () => {
     <div>
       <h1>Software anecdotes</h1>
       <Menu />
-      <AnecdoteList anecdotes={anecdotes} />
-      <About />
-      <CreateNew addNew={addNew} />
+        {notification}
+        <Routes>
+            <Route path="/anecdotes/:id" element={<Anecdote anecdotes={anecdotes} anecdoteById={anecdoteById}/>} />
+            <Route path="/" element={<AnecdoteList anecdotes={anecdotes}/>} />
+            <Route path="/create-new" element={<CreateNew addNew={addNew} setNotification={setNotification}/>}  />
+            <Route path="/about" element={<About />} />
+        </Routes>
       <Footer />
     </div>
   )
