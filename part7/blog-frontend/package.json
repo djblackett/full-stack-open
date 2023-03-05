@@ -7,6 +7,7 @@
     "prop-types": "^15.8.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
+    "react-router-dom": "^6.8.2",
     "react-scripts": "5.0.1",
     "styled-components": "^5.3.8",
     "web-vitals": "^2.1.4"
@@ -20,7 +21,7 @@
     "server": "json-server -p3001 db.json",
     "cypress:open": "cypress open",
     "test:e2e": "cypress run",
-    "lint:css":"stylelint './src/**/*.js'"
+    "lint:css": "stylelint './src/**/*.js'"
   },
   "eslintConfig": {
     "extends": [
@@ -32,7 +33,9 @@
     "presets": [
       "@babel/preset-react"
     ],
-    "plugins": ["babel-plugin-styled-components"]
+    "plugins": [
+      "babel-plugin-styled-components"
+    ]
   },
   "browserslist": {
     "production": [
@@ -53,12 +56,10 @@
     "@testing-library/user-event": "^14.4.3",
     "babel-plugin-styled-components": "^2.0.7",
     "cypress": "^12.7.0",
+    "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-cypress": "^2.12.1",
     "eslint-plugin-jest": "^27.1.6",
     "jest-watch-typeahead": "^0.6.5",
-    "stylelint": "^15.2.0",
-    "stylelint-config-recommended": "^10.0.1",
-    "stylelint-config-styled-components": "^0.1.1",
-    "stylelint-processor-styled-components": "^1.10.0"
+    "prettier": "2.8.4"
   }
 }

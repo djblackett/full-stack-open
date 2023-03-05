@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef } from "react";
-import Blog from "./components/Blog";
+import { useState, useEffect } from "react";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
-import Toggleable from "./components/Toggleable";
-import CreateBlog from "./components/CreateBlog";
 import UsersView from "./components/UsersView";
-import  { useTheme } from "styled-components";
+import { useTheme } from "styled-components";
+import { Link, Route, Routes } from "react-router-dom";
+import UserView from "./components/UserView";
+import userService from "./services/users";
+import BlogView from "./components/BlogView";
+import BlogList from "./components/BlogList";
 
 // remove button only appears after refresh
 const App = () => {
@@ -16,14 +18,12 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  const createFormRef = useRef(null);
   const theme = useTheme();
   const styles = {
     backgroundColor: theme.background,
   };
 
   useEffect(() => {
-
     if (localStorage.getItem("user")) {
       const user = JSON.parse(localStorage.getItem("user"));
       setUser(user);
@@ -57,7 +57,6 @@ const App = () => {
       setPassword("");
 
       blogService.setToken(token);
-
     } catch (error) {
       console.log(error);
       setErrorMessage("Wrong username or password");
@@ -65,6 +64,12 @@ const App = () => {
         setErrorMessage(null);
       }, 5000);
     }
+  };
+
+  const sortBlogsByLikes = (blogs) => {
+    const arr = [...blogs];
+    arr.sort((a, b) => b.likes - a.likes);
+    return arr;
   };
 
   const getBlogs = async () => {
@@ -79,85 +84,47 @@ const App = () => {
     localStorage.clear();
   };
 
-  const handleCreate = async blogObject => {
-
-    const response = await blogService.createBlog(blogObject);
-    // console.log(response);
-    if (response) {
-      setBlogs(blogs.concat(response));
-      createFormRef.current.toggleVisibility();
-    }
+  const [users, setUsers] = useState([]);
+  const getUsers = async () => {
+    const response = await userService.getAll();
+    console.log(response);
+    // const sorted = sortBlogsByLikes(response);
+    setUsers(response);
   };
 
-  const updateBlogFrontend = (id, updatedBlog) => {
-    // console.log(id);
-    // console.log(updatedBlog);
-    const blogIndex = blogs.findIndex(blog => String(blog.id) === id);
-    // console.log(blogIndex);
-    const newArr = blogs.slice(0, blogIndex).concat(updatedBlog).concat(blogs.slice(blogIndex + 1));
-    const sorted = sortBlogsByLikes(newArr);
-    setBlogs(sorted);
-  };
-
-  const removeBlogFrontend = (id) => {
-    const arr = [...blogs];
-    const index = arr.findIndex(blog => blog.id === id);
-    arr.splice(index, 1);
-    setBlogs(arr);
-
-  };
-
-  const sortBlogsByLikes = (blogs) => {
-    const arr = [...blogs];
-    arr.sort((a, b) => b.likes - a.likes);
-    return arr;
-  };
-
-
-  const handleLikeButton = async (blog) => {
-
-    console.log(blog);
-
-    const updatedBlog = {
-      title: blog.title,
-      author: blog.author,
-      url: blog.url,
-      id: blog.id,
-      likes: blog.likes + 1,
-      user: blog.user.id ? blog.user.id : blog.user
-    };
-
-    const result = await blogService.updateBlog(updatedBlog.id, updatedBlog);
-    console.log("result", result);
-
-    if (result) {
-
-      // this compensates for the fact that getAll returns blogs with the full user object as the user field
-      // result.user = {
-      //   id: blog.user.id,
-      //   name: blog.user.name,
-      //   username: blog.user.username
-      // };
-      console.log(result);
-      updateBlogFrontend(result.id, result);
-    }
-  };
+  useEffect(() => {
+    getUsers();
+  }, []);
 
   const loginForm = () => {
     return (
       <div style={styles}>
         <h2>Log in to application</h2>
-        <ErrorMessage message={errorMessage}/>
+        <ErrorMessage message={errorMessage} />
         <form onSubmit={handleLogin}>
           <label>username</label>
-          <br/>
-          <input type="text" value={username} name="Username" onChange={handleUsername} id="username" />
-          <br/>
+          <br />
+          <input
+            type="text"
+            value={username}
+            name="Username"
+            onChange={handleUsername}
+            id="username"
+          />
+          <br />
           <label>password</label>
-          <br/>
-          <input type="password" value={password} name="Password" onChange={handlePassword} id="password" />
-          <br/>
-          <button type="submit" id="login-button">login</button>
+          <br />
+          <input
+            type="password"
+            value={password}
+            name="Password"
+            onChange={handlePassword}
+            id="password"
+          />
+          <br />
+          <button type="submit" id="login-button">
+            login
+          </button>
         </form>
       </div>
     );
@@ -166,32 +133,55 @@ const App = () => {
   const blogForm = () => {
     return (
       <div id="blog-form" style={styles}>
-
-        <UsersView style={ styles }/>
         <h2>blogs</h2>
-        <SuccessMessage message={successMessage}/>
-        <br/>
-        {user.name} logged in
-        <button onClick={logout} id="logout-button">logout</button>
-        <br/>
+        <SuccessMessage message={successMessage} />
+        <br />
 
-        {/*{!isCreateVisible && <button onClick={toggleCreate}>new note</button>}*/}
-        <Toggleable ref={createFormRef} buttonLabel="new blog" id="new-blog" >
-          <CreateBlog blogs={blogs}
-            setSuccessMessage={setSuccessMessage}
-            setBlogs={setBlogs}
-            handleCreate={handleCreate}
-            user={user}
-
+        <nav style={{ color: "white" }}>
+          <ul
+            style={{
+              listStyle: "none",
+              padding: 0,
+              display: "flex",
+              justifyContent: "space-between",
+              width: "75px",
+            }}
+          >
+            <li>
+              <Link to={"/"}>blogs</Link>
+            </li>
+            <li>
+              {" "}
+              <Link to={"/users"}>users</Link>
+            </li>
+          </ul>
+        </nav>
+        <span>{user.name} logged in</span>
+        <button onClick={logout} id="logout-button">
+          logout
+        </button>
+        <br />
+        <Routes>
+          <Route path="/users/:id" element={<UserView users={users} />} />
+          <Route
+            path="/users"
+            element={<UsersView style={styles} users={users} />}
           />
-        </Toggleable>
-        <br/>
-        {blogs.length > 0 && blogs.map(blog => {
-
-          // console.log(blog);
-          return <Blog key={blog.id} blog={blog} handleLikeButton={handleLikeButton} updateBlog={updateBlogFrontend} user={user} removeBlogFrontend={removeBlogFrontend}/>;
-        }
-        )}
+          <Route path={"/blogs/:id"} element={<BlogView blogs={blogs} />} />
+          <Route
+            path={"/"}
+            element={
+              <BlogList
+                setSuccessMessage={setSuccessMessage}
+                sortBlogsByLikes={sortBlogsByLikes}
+                user={user}
+                blogs={blogs}
+                setBlogs={setBlogs}
+              />
+            }
+          />
+        </Routes>
+        {/*{!isCreateVisible && <button onClick={toggleCreate}>new note</button>}*/}
       </div>
     );
   };
@@ -205,21 +195,37 @@ const SuccessMessage = ({ message }) => {
   if (!message) {
     return null;
   }
-  return <p style={{ fontSize: 16, color: "green", padding: "5px", border: "3px solid green" }} id="login-success">{message}</p>;
+  return (
+    <p
+      style={{
+        fontSize: 16,
+        color: "green",
+        padding: "5px",
+        border: "3px solid green",
+      }}
+      id="login-success"
+    >
+      {message}
+    </p>
+  );
 };
 
 const ErrorMessage = ({ message }) => {
   if (!message) {
     return null;
   }
-  return <p
-    style={{
-      fontSize: 16,
-      color: "red",
-      padding: "5px",
-      border: "3px solid red",
-      background: "white"
-    }}
-    id="login-error"
-  >{message}</p>;
+  return (
+    <p
+      style={{
+        fontSize: 16,
+        color: "red",
+        padding: "5px",
+        border: "3px solid red",
+        background: "white",
+      }}
+      id="login-error"
+    >
+      {message}
+    </p>
+  );
 };

@@ -2,8 +2,8 @@ import styled from "styled-components";
 
 const UserContainer = styled.div`
   display: flex;
-  color: ${({ theme }) => theme.altText };
-  background-color: ${({ theme }) => theme.item };
+  color: ${({ theme }) => theme.altText};
+  background-color: ${({ theme }) => theme.item};
   border-radius: 8px;
   padding: 5px;
   margin: 5px;
@@ -21,13 +21,10 @@ const Blogs = styled.p`
 `;
 
 const UserListItem = ({ user }) => {
-
   return (
-
     <UserContainer>
       <Name>{user.name}</Name>
       <Blogs>{user.blogs.length}</Blogs>
-
     </UserContainer>
   );
 };
