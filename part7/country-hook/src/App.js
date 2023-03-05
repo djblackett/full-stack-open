@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import axios from 'axios'
 
 const useField = (type) => {
@@ -18,7 +18,30 @@ const useField = (type) => {
 const useCountry = (name) => {
   const [country, setCountry] = useState(null)
 
-  useEffect(() => {})
+  const firstUpdate = useRef(true);
+
+  useEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+    } else {
+      const getCountry = async () => {
+        try {
+          const response = await fetch(`https://restcountries.com/v2/name/${name}?fullText=true`);
+          if (response.ok) {
+            const result = await response.json();
+            const newCountry = {found: true, data: result[0]};
+            console.log(newCountry)
+            setCountry(newCountry);
+          } else {
+            setCountry({found: false})
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+      getCountry();
+    }
+  }, [name])
 
   return country
 }
