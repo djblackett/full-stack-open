@@ -7,16 +7,16 @@ let token = null;
 const setToken = (newToken) => {
   token = newToken;
 };
+
 const createAuthToken = () => {
   return {
     headers: {
-      Authorization: "Bearer " + token
-    }
+      Authorization: "bearer " + token,
+    },
   };
 };
 
 const getAll = async () => {
-
   const config = createAuthToken(token);
   try {
     const request = await axios.get(baseUrl, config);
@@ -28,7 +28,23 @@ const getAll = async () => {
 
 const createBlog = async (newBlog) => {
   try {
-    const request = await axios.post("/api/blogs", newBlog, createAuthToken());
+    const request = await axios.post(baseUrl, newBlog, createAuthToken());
+    console.log(token);
+    return request.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const addComment = async (id, comment) => {
+  try {
+    const request = await axios.post(
+      `${baseUrl}/${String(id)}/comments`,
+      comment,
+      createAuthToken()
+    );
+
+    console.log(token);
     return request.data;
   } catch (error) {
     console.log(error);
@@ -36,9 +52,12 @@ const createBlog = async (newBlog) => {
 };
 
 const updateBlog = async (id, newBlog) => {
-
   try {
-    const request = await axios.put(`/api/blogs/${String(id)}`, newBlog, createAuthToken());
+    const request = await axios.put(
+      `/api/blogs/${String(id)}`,
+      newBlog,
+      createAuthToken()
+    );
     return request.data;
   } catch (error) {
     console.log(error);
@@ -53,4 +72,11 @@ const removeBlog = async (id) => {
   }
 };
 
-export default { getAll, setToken, createBlog, updateBlog, removeBlog };
+export default {
+  getAll,
+  setToken,
+  createBlog,
+  updateBlog,
+  removeBlog,
+  addComment,
+};

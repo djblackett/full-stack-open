@@ -167,7 +167,10 @@ const App = () => {
             path="/users"
             element={<UsersView style={styles} users={users} />}
           />
-          <Route path={"/blogs/:id"} element={<BlogView blogs={blogs} />} />
+          <Route
+            path={"/blogs/:id"}
+            element={<BlogView getBlogs={getBlogs} blogs={blogs} />}
+          />
           <Route
             path={"/"}
             element={

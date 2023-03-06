@@ -1,7 +1,8 @@
 import { useParams } from "react-router-dom";
+import Comments from "./Comments";
 
 // todo move like button logic in here - tho i will be changing it...
-const BlogView = ({ blogs }) => {
+const BlogView = ({ blogs, getBlogs }) => {
   const id = useParams().id;
   const blog = blogs.find((n) => n.id === id);
 
@@ -20,6 +21,9 @@ const BlogView = ({ blogs }) => {
       <span>likes {blog.likes} </span>
       <button>like</button>
       <p>added by {blog.user.name}</p>
+
+      <h2>Comments</h2>
+      <Comments blog={blog} getBlogs={getBlogs} />
     </div>
   );
 };

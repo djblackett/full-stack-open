@@ -1,7 +1,6 @@
 const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
 
-
 blogsRouter.get("/", async (request, response) => {
   const blogs = await Blog.find({}).populate("user", { name: 1, username: 1 });
   response.json(blogs);
@@ -16,8 +15,21 @@ blogsRouter.get("/:id", async (request, response) => {
   }
 });
 
-blogsRouter.post("/", async (request, response) => {
+blogsRouter.post("/:id/comments", async (request, response) => {
+  const id = request.params.id;
+  // const body = request.body;
+  const text = request.body.comment;
 
+  const blog = await Blog.findById(String(id));
+
+  blog.comments = blog.comments.concat(text);
+
+  await blog.save();
+
+  response.status(201).json(blog);
+});
+
+blogsRouter.post("/", async (request, response) => {
   const body = request.body;
   const user = request.user;
   console.log(user);
@@ -26,7 +38,7 @@ blogsRouter.post("/", async (request, response) => {
     title: body.title,
     author: body.author,
     url: body.url,
-    user: user._id.toString()
+    user: user._id.toString(),
   };
 
   console.log(blogObj);
@@ -36,13 +48,12 @@ blogsRouter.post("/", async (request, response) => {
   const result = await blog.save();
   user.blogs = user.blogs.concat(result._id);
 
-  const updatedUser = await user.save();
+  await user.save();
   console.log(result);
   response.status(201).json(result);
 });
 
 blogsRouter.delete("/:id", async (request, response) => {
-
   const user = request.user;
 
   // this shouldn't be possible to do from the front end, but for the sake of backend testing...
@@ -61,10 +72,11 @@ blogsRouter.delete("/:id", async (request, response) => {
     await Blog.findByIdAndRemove(String(id));
     response.status(204).end();
   } else {
-    response.status(401).send({ error: "You can only delete your own blog posts" });
+    response
+      .status(401)
+      .send({ error: "You can only delete your own blog posts" });
   }
 });
-
 
 blogsRouter.put("/:id", async (request, response) => {
   // const user = request.user;
@@ -77,12 +89,11 @@ blogsRouter.put("/:id", async (request, response) => {
   const result = await Blog.findByIdAndUpdate(id, body, {
     new: true,
     runValidators: true,
-    context: "query"
+    context: "query",
   });
 
   console.log(result);
   response.json(result);
-
 });
 
 module.exports = blogsRouter;
