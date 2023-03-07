@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import blogService from "../services/blogs";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
+import { useUserValue } from "./userContext";
 
-// todo figure out what to do with the mismatch betweeen the return value from getAll vs everything else
-
-const Blog = ({ blog, handleLikeButton, user, removeBlogFrontend }) => {
-  const [viewFull] = useState(false);
+const Blog = ({ blog }) => {
   const [userId, setUserId] = useState("");
+  const user = useUserValue();
   const [userIsAuthor, setUserIsAuthor] = useState(
     String(blog.user.id) === String(user.id)
   );
@@ -18,14 +17,11 @@ const Blog = ({ blog, handleLikeButton, user, removeBlogFrontend }) => {
     } else {
       setUserId(blog.user.id);
     }
-  });
+  }, [blog.user]);
 
   useEffect(() => {
     setUserIsAuthor(userId === String(user.id));
-  });
-
-  // console.log("blog.user.id: ", blog.user.id);
-  // console.log("user.id: ", user.id);
+  }, [userId, user.id]);
 
   const blogStyle = {
     paddingTop: "10px",
@@ -34,18 +30,6 @@ const Blog = ({ blog, handleLikeButton, user, removeBlogFrontend }) => {
     borderWidth: "1px",
     marginBottom: "5px",
     borderRadius: "8px",
-    // filter: "drop-shadow(10px 10px 4px #4444dd)",
-  };
-
-  const handleRemove = async () => {
-    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}?`)) {
-      await blogService.removeBlog(blog.id);
-      removeBlogFrontend(blog.id);
-    }
-  };
-
-  const handleClickLikeButton = () => {
-    handleLikeButton(blog);
   };
 
   if (!blog) {
@@ -53,35 +37,10 @@ const Blog = ({ blog, handleLikeButton, user, removeBlogFrontend }) => {
   }
 
   return (
-    <div style={blogStyle} className="blog">
-      <div className="blog-container">
-        <Link to={`/blogs/${blog.id}`}>
-          <span>{blog.title}</span> {blog.author}
-        </Link>
-        {/*<button onClick={() => setViewFull(!viewFull)} className="view-button">*/}
-        {/*  {viewFull ? "hide" : "view"}*/}
-        {/*</button>*/}
-        <br />
-        {viewFull && (
-          <div className="full-view">
-            {blog.url}
-            <br />
-            Likes {blog.likes}
-            <br />
-            Id {blog.id}
-            <br />
-            User: {userId}
-            <button onClick={handleClickLikeButton} className="like-button">
-              like
-            </button>
-            {userIsAuthor && (
-              <button onClick={handleRemove} className="remove-button">
-                remove
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+    <div className="blog-container" style={blogStyle}>
+      <Link to={`/blogs/${blog.id}`}>
+        <span>{blog.title}</span> {blog.author}
+      </Link>
     </div>
   );
 };
@@ -90,7 +49,4 @@ export default Blog;
 
 Blog.propTypes = {
   blog: PropTypes.object.isRequired,
-  handleLikeButton: PropTypes.func.isRequired,
-  user: PropTypes.object.isRequired,
-  removeBlogFrontend: PropTypes.func.isRequired,
 };

@@ -1,12 +1,14 @@
 import { useParams } from "react-router-dom";
+import { useUsers } from "../hooks/useUsers";
 
-const UserView = ({ users }) => {
+const UserView = () => {
   const id = useParams().id;
-  const user = users.find((n) => n.id === id);
+  const { data, isLoading } = useUsers();
 
-  if (!user) {
+  if (isLoading || !data) {
     return null;
   }
+  const user = data.find((n) => n.id === id);
 
   return (
     <div>

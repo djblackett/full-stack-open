@@ -1,11 +1,14 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import { useNotificationDispatch } from "./NotificationContext";
+import { useUserValue } from "./userContext";
 
-function CreateBlog({ setSuccessMessage, handleCreate, user }) {
+function CreateBlog({ handleCreate }) {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [author, setAuthor] = useState("");
-
+  const user = useUserValue();
+  const dispatch = useNotificationDispatch();
   const handleTitle = (e) => {
     setTitle(e.target.value);
   };
@@ -29,10 +32,17 @@ function CreateBlog({ setSuccessMessage, handleCreate, user }) {
     };
 
     handleCreate(blogObj);
-    setSuccessMessage(`a new blog ${title} by ${author} added`);
+    dispatch({
+      type: "CREATE",
+      content: `a new blog "${title}" by ${author} added`,
+    });
+    // setSuccessMessage(`a new blog ${title} by ${author} added`);
+
     setTimeout(() => {
-      setSuccessMessage(null);
+      // setSuccessMessage(null);
+      dispatch({ type: "CLEAR" });
     }, 5000);
+
     setTitle("");
     setAuthor("");
     setUrl("");
@@ -84,5 +94,4 @@ export default CreateBlog;
 
 CreateBlog.propTypes = {
   setSuccessMessage: PropTypes.func.isRequired,
-  user: PropTypes.object.isRequired,
 };

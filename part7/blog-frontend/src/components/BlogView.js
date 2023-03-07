@@ -1,13 +1,72 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Comments from "./Comments";
+import { useBlogs } from "../hooks/useBlogs";
+import { useMutation, useQueryClient } from "react-query";
+import { deleteBlog, updateBlog } from "../requests";
+import { useState } from "react";
+import { useUserValue } from "./userContext";
 
-// todo move like button logic in here - tho i will be changing it...
-const BlogView = ({ blogs, getBlogs }) => {
+// todo something weird with ids happening
+
+const BlogView = ({ getBlogs }) => {
   const id = useParams().id;
-  const blog = blogs.find((n) => n.id === id);
+  const { data, isLoading } = useBlogs();
+  const blog = data?.find((n) => n.id === id);
+  const navigate = useNavigate();
+  const [isDeleting, setDeleting] = useState(false);
+  const user = useUserValue();
+  const queryClient = useQueryClient();
+
+  const userIsAuthor = () => {
+    return user.id === blog.id || user.id === blog.user?.id;
+  };
+
+  const likeBlogMutation = useMutation(updateBlog, {
+    onSuccess: () => {
+      // queryClient.invalidateQueries("blogs");
+      queryClient.refetchQueries(["blogs"]);
+    },
+  });
+
+  const deleteBlogMutation = useMutation(deleteBlog, {
+    onSuccess: () => {
+      // queryClient.invalidateQueries("blogs");
+      queryClient.refetchQueries(["blogs"]);
+    },
+  });
 
   if (!blog) {
     return null;
+  }
+  const handleLikeButton = async () => {
+    // console.log(blog);
+    //
+    // const updatedBlog = {
+    //   title: blog.title,
+    //   author: blog.author,
+    //   url: blog.url,
+    //   id: blog.id,
+    //   likes: blog.likes + 1,
+    //   user: blog.user.id ? blog.user.id : blog.user,
+    //   // user: blog.user,
+    // };
+
+    // console.log(updatedBlog);
+    await likeBlogMutation.mutateAsync({
+      ...blog,
+      likes: blog.likes + 1,
+      user: blog.user.id ? String(blog.user.id) : String(blog.user),
+    });
+  };
+
+  const handleDeleteBlog = () => {
+    deleteBlogMutation.mutate(blog.id);
+    setDeleting(true);
+    navigate("/");
+  };
+
+  if (isLoading) {
+    return <div>loading</div>;
   }
 
   return (
@@ -19,7 +78,14 @@ const BlogView = ({ blogs, getBlogs }) => {
         <a href={blog.url}>{blog.url}</a>
       </p>
       <span>likes {blog.likes} </span>
-      <button>like</button>
+      <button onClick={handleLikeButton}>like</button>
+      <button
+        style={{ display: userIsAuthor() ? "" : "none" }}
+        onClick={handleDeleteBlog}
+        disabled={isDeleting}
+      >
+        remove
+      </button>
       <p>added by {blog.user.name}</p>
 
       <h2>Comments</h2>

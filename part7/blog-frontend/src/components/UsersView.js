@@ -1,12 +1,13 @@
 import styled from "styled-components";
 import UserListItem from "./UserListItem";
 import { Link } from "react-router-dom";
+import { useQuery } from "react-query";
+import { getAllUsers } from "../requests";
+import { useUsers } from "../hooks/useUsers";
 
 const UserGrid = styled.div`
   display: flex;
   flex-direction: column;
-  //grid-template-columns: auto auto;
-  //grid-auto-rows: auto;
   background-color: ${({ theme }) => theme.text};
   width: fit-content;
   border-radius: 8px;
@@ -26,7 +27,12 @@ const BlogsCreated = styled.p`
   font-weight: bold;
 `;
 
-const UsersView = ({ users }) => {
+const UsersView = () => {
+  const { data, isLoading } = useUsers();
+
+  if (isLoading) {
+    return <div>Loading users...</div>;
+  }
   return (
     <div>
       <div style={{ display: "flex" }}>
@@ -34,13 +40,14 @@ const UsersView = ({ users }) => {
         <BlogsCreated>Blogs created</BlogsCreated>
       </div>
       <UserGrid>
-        {users.map((user) => (
-          <li key={user.id}>
-            <Link to={`/users/${user.id}`}>
-              <UserListItem user={user} />
-            </Link>
-          </li>
-        ))}
+        {data &&
+          data.map((user) => (
+            <li key={user.id}>
+              <Link to={`/users/${user.id}`}>
+                <UserListItem user={user} />
+              </Link>
+            </li>
+          ))}
       </UserGrid>
     </div>
   );
