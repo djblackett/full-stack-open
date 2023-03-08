@@ -8,8 +8,6 @@ import { useUserDispatch } from "./userContext";
 const LoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState(null);
-
   const dispatch = useNotificationDispatch();
   const userDispatch = useUserDispatch();
   const handleUsername = (e) => {
@@ -43,7 +41,7 @@ const LoginForm = () => {
   return (
     <div>
       <h2>Log in to application</h2>
-      <Notification message={errorMessage} isError={true} />
+      <Notification isError={true} />
       <form onSubmit={handleLogin}>
         <label>username</label>
         <br />

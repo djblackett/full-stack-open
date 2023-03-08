@@ -3,13 +3,28 @@ import UserView from "./UserView";
 import UsersView from "./UsersView";
 import BlogView from "./BlogView";
 import BlogList from "./BlogList";
-import React, { useState } from "react";
 import Notification from "./Notification";
-import { useNotificationDispatch } from "./NotificationContext";
 import { useUserDispatch, useUserValue } from "./userContext";
+import styled from "styled-components";
 
-const BlogForm = ({ users, setBlogs, sortBlogsByLikes }) => {
-  const [successMessage, setSuccessMessage] = useState(null);
+const BlogContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  //align-items: center;
+  justify-content: space-between;
+  background-color: #101010;
+  padding: 2rem;
+  border-radius: 8px;
+  min-width: 300px;
+`;
+
+const Button = styled.button`
+  width: 80px;
+  margin-left: 0;
+  display: inline-flex;
+`;
+
+const BlogForm = ({ users }) => {
   const userDispatch = useUserDispatch();
   const user = useUserValue();
   const logout = () => {
@@ -19,7 +34,7 @@ const BlogForm = ({ users, setBlogs, sortBlogsByLikes }) => {
   };
 
   return (
-    <div id="blog-form">
+    <BlogContainer id="blog-form">
       <h2>blogs</h2>
       <Notification isError={false} />
       <nav style={{ color: "white" }}>
@@ -41,27 +56,17 @@ const BlogForm = ({ users, setBlogs, sortBlogsByLikes }) => {
         </ul>
       </nav>
       <span>{user.name} logged in</span>
-      <button onClick={logout} id="logout-button">
+      <Button onClick={logout} id="logout-button">
         logout
-      </button>
+      </Button>
       <br />
       <Routes>
         <Route path="/users/:id" element={<UserView users={users} />} />
         <Route path="/users" element={<UsersView users={users} />} />
         <Route path={"/blogs/:id"} element={<BlogView user={user} />} />
-        <Route
-          path={"/"}
-          element={
-            <BlogList
-              setSuccessMessage={setSuccessMessage}
-              sortBlogsByLikes={sortBlogsByLikes}
-              user={user}
-              setBlogs={setBlogs}
-            />
-          }
-        />
+        <Route path={"/"} element={<BlogList />} />
       </Routes>
-    </div>
+    </BlogContainer>
   );
 };
 

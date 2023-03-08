@@ -5,12 +5,10 @@ import Blog from "./Blog";
 import userEvent from "@testing-library/user-event";
 import CreateBlog from "./CreateBlog";
 
-
-
 const userMock = {
   name: "test",
   username: "test",
-  id: "29039e8fn39"
+  id: "29039e8fn39",
 };
 
 const blog = {
@@ -23,10 +21,16 @@ const blog = {
 };
 
 test("renders content", () => {
-
   const mockHandler = jest.fn();
 
-  render(<Blog blog={blog} handleLikeButton={mockHandler} removeBlogFrontend={mockHandler} user={userMock} />);
+  render(
+    <Blog
+      blog={blog}
+      handleLikeButton={mockHandler}
+      removeBlogFrontend={mockHandler}
+      user={userMock}
+    />
+  );
   const title = screen.getByText(blog.title);
   const author = screen.getByText(blog.author);
   const div = screen.queryByText(blog.url);
@@ -40,25 +44,38 @@ test("renders content", () => {
 
 test("clicking view shows the full blog info", async () => {
   const mockHandler = jest.fn();
-  render(<Blog blog={blog} removeBlogFrontend={mockHandler} user={userMock}  handleLikeButton={mockHandler}/>);
+  render(
+    <Blog
+      blog={blog}
+      removeBlogFrontend={mockHandler}
+      user={userMock}
+      handleLikeButton={mockHandler}
+    />
+  );
 
   const user = userEvent.setup();
   const button = screen.getByText("view");
   await user.click(button);
 
   const url = screen.queryByText(blog.url);
-  const likes =  screen.queryByText(blog.likes);
+  const likes = screen.queryByText(blog.likes);
 
   expect(url).toBeDefined();
   expect(likes).toBeDefined();
 });
 
-
 test("clicking like button twice calls update function twice", async () => {
   const mockHandler = jest.fn();
   const mockRemove = jest.fn();
 
-  render(<Blog blog={blog} handleLikeButton={mockHandler} removeBlogFrontend={mockRemove} user={userMock} />);
+  render(
+    <Blog
+      blog={blog}
+      handleLikeButton={mockHandler}
+      removeBlogFrontend={mockRemove}
+      user={userMock}
+    />
+  );
 
   const user = userEvent.setup();
 
@@ -74,12 +91,17 @@ test("clicking like button twice calls update function twice", async () => {
 });
 
 test("add blog", async () => {
-
   const user = userEvent.setup();
   const handleCreate = jest.fn();
   const setSuccessMessage = jest.fn();
 
-  render(<CreateBlog user={userMock} setSuccessMessage={setSuccessMessage} handleCreate={handleCreate} />);
+  render(
+    <CreateBlog
+      user={userMock}
+      setSuccessMessage={setSuccessMessage}
+      handleCreate={handleCreate}
+    />
+  );
 
   const title = screen.getByPlaceholderText("title");
   const author = screen.getByPlaceholderText("author");
@@ -89,13 +111,13 @@ test("add blog", async () => {
   const newBlog = {
     title: "this is my title",
     author: "I am the author",
-    url:  "http://urltothesite.com"
+    url: "http://urltothesite.com",
   };
 
   await user.type(title, newBlog.title);
   await user.type(author, newBlog.author);
   await user.type(url, newBlog.url);
-  await  user.click(submitButton);
+  await user.click(submitButton);
 
   expect(handleCreate.mock.calls).toHaveLength(1);
   expect(handleCreate.mock.calls[0][0].title).toBe(newBlog.title);

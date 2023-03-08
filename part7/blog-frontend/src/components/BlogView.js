@@ -6,8 +6,6 @@ import { deleteBlog, updateBlog } from "../requests";
 import { useState } from "react";
 import { useUserValue } from "./userContext";
 
-// todo something weird with ids happening
-
 const BlogView = ({ getBlogs }) => {
   const id = useParams().id;
   const { data, isLoading } = useBlogs();
@@ -23,15 +21,13 @@ const BlogView = ({ getBlogs }) => {
 
   const likeBlogMutation = useMutation(updateBlog, {
     onSuccess: () => {
-      // queryClient.invalidateQueries("blogs");
-      queryClient.refetchQueries(["blogs"]);
+      queryClient.invalidateQueries("blogs");
     },
   });
 
   const deleteBlogMutation = useMutation(deleteBlog, {
     onSuccess: () => {
-      // queryClient.invalidateQueries("blogs");
-      queryClient.refetchQueries(["blogs"]);
+      queryClient.invalidateQueries("blogs");
     },
   });
 
@@ -39,19 +35,6 @@ const BlogView = ({ getBlogs }) => {
     return null;
   }
   const handleLikeButton = async () => {
-    // console.log(blog);
-    //
-    // const updatedBlog = {
-    //   title: blog.title,
-    //   author: blog.author,
-    //   url: blog.url,
-    //   id: blog.id,
-    //   likes: blog.likes + 1,
-    //   user: blog.user.id ? blog.user.id : blog.user,
-    //   // user: blog.user,
-    // };
-
-    // console.log(updatedBlog);
     await likeBlogMutation.mutateAsync({
       ...blog,
       likes: blog.likes + 1,
@@ -87,7 +70,6 @@ const BlogView = ({ getBlogs }) => {
         remove
       </button>
       <p>added by {blog.user.name}</p>
-
       <h2>Comments</h2>
       <Comments blog={blog} getBlogs={getBlogs} />
     </div>

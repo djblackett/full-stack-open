@@ -1,23 +1,11 @@
 import { createContext, useContext, useReducer } from "react";
-import { setToken } from "../requests";
 
 const userReducer = (state, action) => {
   switch (action.type) {
     case "LOGIN":
-      // console.log(action.content);
       return action.user;
     case "LOGOUT":
       return null;
-    // case "ERROR":
-    //   return {
-    //     ...state,
-    //     content: "An error occurred while logging in",
-    //   };
-    // case "CLEAR":
-    //   return {
-    //     ...state,
-    //     content: "",
-    //   };
     default:
       return state;
   }

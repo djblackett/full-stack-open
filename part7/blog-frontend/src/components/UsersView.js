@@ -1,8 +1,6 @@
 import styled from "styled-components";
 import UserListItem from "./UserListItem";
 import { Link } from "react-router-dom";
-import { useQuery } from "react-query";
-import { getAllUsers } from "../requests";
 import { useUsers } from "../hooks/useUsers";
 
 const UserGrid = styled.div`
@@ -12,6 +10,7 @@ const UserGrid = styled.div`
   width: fit-content;
   border-radius: 8px;
   filter: drop-shadow(10px 10px 4px #4444dd);
+  list-style: none;
 `;
 
 const Title = styled.p`

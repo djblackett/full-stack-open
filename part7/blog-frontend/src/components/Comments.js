@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import blogService from "../services/blogs";
 import { useState } from "react";
 import { addComment } from "../requests";
 import { useMutation, useQueryClient } from "react-query";
@@ -13,8 +12,7 @@ const Comments = ({ blog }) => {
   const queryClient = useQueryClient();
 
   const addCommentMutation = useMutation(addComment, {
-    //   onSuccess: () => queryClient.invalidateQueries(["blogs"]),
-    onSuccess: () => queryClient.refetchQueries(["blogs"]),
+    onSuccess: () => queryClient.invalidateQueries(["blogs"]),
   });
 
   const handleCommentChange = (e) => {
@@ -24,25 +22,14 @@ const Comments = ({ blog }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (comment.length > 0) {
-      const text = {
-        comment: comment,
-      };
-
-      setComment("");
-
-      console.log(text);
-
       const newObject = {
         ...blog,
         user: blog.user.id ? blog.user.id : blog.user,
         comments: blog.comments.concat(comment),
       };
 
+      setComment("");
       await addCommentMutation.mutateAsync(newObject);
-      queryClient.invalidateQueries(["blogs"]);
-      // const response = await blogService.addComment(blog.id, text);
-      // console.log(response);
-      // getBlogs();
     }
   };
 

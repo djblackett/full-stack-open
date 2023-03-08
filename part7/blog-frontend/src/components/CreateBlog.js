@@ -32,14 +32,13 @@ function CreateBlog({ handleCreate }) {
     };
 
     handleCreate(blogObj);
+
     dispatch({
       type: "CREATE",
       content: `a new blog "${title}" by ${author} added`,
     });
-    // setSuccessMessage(`a new blog ${title} by ${author} added`);
 
     setTimeout(() => {
-      // setSuccessMessage(null);
       dispatch({ type: "CLEAR" });
     }, 5000);
 
@@ -93,5 +92,5 @@ function CreateBlog({ handleCreate }) {
 export default CreateBlog;
 
 CreateBlog.propTypes = {
-  setSuccessMessage: PropTypes.func.isRequired,
+  handleCreate: PropTypes.func.isRequired,
 };

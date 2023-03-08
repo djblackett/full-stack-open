@@ -12,6 +12,7 @@ export const GlobalStyles = createGlobalStyle`
     background: ${({ theme }) => theme.body};
     color: ${({ theme }) => theme.text};
     font-size: 16px;
+    
   }
   
   button {
@@ -20,7 +21,8 @@ export const GlobalStyles = createGlobalStyle`
     border-style: none;
     padding: 5px 10px;
     border-radius: 8px;
-    margin: 5px;
+    margin: 10px;
+    margin-left: 0;
     filter: drop-shadow(1px 1px 4px ${({ theme }) => theme.text});
 }
   
@@ -28,5 +30,9 @@ export const GlobalStyles = createGlobalStyle`
     padding: 5px 10px;
     margin: 5px;
     margin-bottom: 0.5rem;
+    border-radius: 8px;
+    background-color: lightsteelblue;
+    font-weight: bold;
+    min-width: 250px;
   }
   `;

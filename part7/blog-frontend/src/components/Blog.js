@@ -1,47 +1,48 @@
-import { useEffect, useState } from "react";
-import blogService from "../services/blogs";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { useUserValue } from "./userContext";
+import styled from "styled-components";
+
+const BlogContainer = styled.div`
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  border: solid;
+  border-width: 1px;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 15, 22, 0.8);
+`;
+
+const BlogText = styled.p`
+  margin: 0;
+  padding: 0;
+  text-decoration: none;
+  font-style: normal;
+  color: cadetblue;
+
+  &:visited {
+    text-decoration: none;
+    color: initial;
+  }
+`;
 
 const Blog = ({ blog }) => {
-  const [userId, setUserId] = useState("");
-  const user = useUserValue();
-  const [userIsAuthor, setUserIsAuthor] = useState(
-    String(blog.user.id) === String(user.id)
-  );
-
-  useEffect(() => {
-    if (typeof blog.user === "string") {
-      setUserId(blog.user);
-    } else {
-      setUserId(blog.user.id);
-    }
-  }, [blog.user]);
-
-  useEffect(() => {
-    setUserIsAuthor(userId === String(user.id));
-  }, [userId, user.id]);
-
-  const blogStyle = {
-    paddingTop: "10px",
-    paddingLeft: "2px",
-    border: "solid",
-    borderWidth: "1px",
-    marginBottom: "5px",
-    borderRadius: "8px",
-  };
+  const blogStyle = {};
 
   if (!blog) {
     return null;
   }
 
   return (
-    <div className="blog-container" style={blogStyle}>
-      <Link to={`/blogs/${blog.id}`}>
-        <span>{blog.title}</span> {blog.author}
+    <BlogContainer className="blog-container" style={blogStyle}>
+      <Link to={`/blogs/${blog.id}`} style={{ textDecoration: "none" }}>
+        <BlogText>
+          {blog.title} {blog.author}
+        </BlogText>
       </Link>
-    </div>
+    </BlogContainer>
   );
 };
 
