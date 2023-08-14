@@ -162,7 +162,7 @@ export const toNewEntry = (entry: unknown): NewEntry => {
             // entry.healthCheckRating in HealthCheckRating
         ) {
           // return Object.defineProperty(newEntry, "healthCheckRating", HealthCheckRating[parseHealthCheckRating(entry.healthCheckRating)]) as NewEntry;
-          newEntry.healthCheckRating = String(HealthCheckRating[parseHealthCheckRating(entry.healthCheckRating)]);
+          newEntry.healthCheckRating = parseHealthCheckRating(Number(entry.healthCheckRating));
           console.log(newEntry);
           return newEntry as NewEntry;
         }
@@ -194,18 +194,18 @@ const parseDescription = (description: unknown) => {
 };
 
 const parseHealthCheckRating = (rating: unknown) => {
-    if (!rating || !isString(rating)) {
-      throw new Error("invalid health check rating");
+    if (!rating) {
+      throw new Error("Missing health check rating");
     }
 
     switch (rating) {
-      case "Healthy":
+      case 0:
         return HealthCheckRating.Healthy;
-      case "LowRisk":
+      case 1:
         return HealthCheckRating.LowRisk;
-      case "HighRisk":
+      case 2:
         return HealthCheckRating.HighRisk;
-      case "CriticalRisk":
+      case 3:
         return HealthCheckRating.CriticalRisk;
       default:
         throw new Error("Health check rating not recognized");
