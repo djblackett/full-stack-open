@@ -1,4 +1,4 @@
-import {Diagnosis, Gender, HealthCheckRating, NewEntry, NewPatientEntry} from "./types";
+import {Diagnosis, Entry, Gender, HealthCheckRating, NewEntry, NewPatientEntry} from "./types";
 
 const toNewPatientEntry = (object: unknown): NewPatientEntry => {
   if (!object || typeof object !== "object") {
@@ -22,8 +22,8 @@ const toNewPatientEntry = (object: unknown): NewPatientEntry => {
         ssn: parseSsn(object.ssn),
         occupation: parseOccupation(object.occupation),
         gender: parseGender(object.gender),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        entries: object.entries
+
+        entries: object.entries as Entry[]
       };
     }
   }
@@ -34,11 +34,14 @@ const isString = (text: unknown): text is string => {
   return typeof text === "string" || text instanceof String;
 };
 
+const isNumber = (text: unknown) => {
+  return typeof text === "number" || text instanceof Number;
+};
+
 const parseName = (name: unknown): string => {
   if (!name || !isString(name)) {
     throw new Error("Incorrect or missing name");
   }
-
   return name;
 };
 
@@ -46,7 +49,6 @@ const parseOccupation = (occupation: unknown): string => {
   if (!occupation || !isString(occupation)) {
     throw new Error("Incorrect or missing occupation");
   }
-
   return occupation;
 };
 
@@ -54,7 +56,6 @@ const parseDateOfBirth = (dateOfBirth: unknown): string => {
   if (!dateOfBirth || !isString(dateOfBirth)) {
     throw new Error("Incorrect or missing date of birth");
   }
-
   return dateOfBirth;
 };
 
@@ -62,7 +63,6 @@ const parseSsn = (ssn: unknown): string => {
   if (!ssn || !isString(ssn)) {
     throw new Error("Incorrect or missing ssn");
   }
-
   return ssn;
 };
 
@@ -83,6 +83,7 @@ interface TypeKeyEntry {
   type: string,
   [key: string]: any
 }
+
 const validateEntryHasType = (obj: any): obj is TypeKeyEntry => {
   return "type" in obj;
 };
@@ -139,8 +140,6 @@ export const toNewEntry = (entry: unknown): NewEntry => {
     };
 
 
-
-
     if ("diagnosisCodes" in entry) {
       newEntry = Object.defineProperty(newEntry, "diagnosisCodes", {value: parseDiagnosisCodes(entry.diagnosisCodes)});
     }
@@ -150,18 +149,13 @@ export const toNewEntry = (entry: unknown): NewEntry => {
         if (
             "discharge" in entry
         ) {
-          // Object.defineProperty(newEntry, "discharge", { value: parseDischarge(entry.discharge)});
           newEntry.discharge = parseDischarge(entry.discharge);
           console.log(newEntry);
           return newEntry as NewEntry;
         }
         break;
       case "HealthCheck":
-        if ("healthCheckRating" in entry &&
-            isString(entry.healthCheckRating) //&&
-            // entry.healthCheckRating in HealthCheckRating
-        ) {
-          // return Object.defineProperty(newEntry, "healthCheckRating", HealthCheckRating[parseHealthCheckRating(entry.healthCheckRating)]) as NewEntry;
+        if ("healthCheckRating" in entry) {
           newEntry.healthCheckRating = parseHealthCheckRating(Number(entry.healthCheckRating));
           console.log(newEntry);
           return newEntry as NewEntry;
@@ -169,13 +163,9 @@ export const toNewEntry = (entry: unknown): NewEntry => {
         break;
       case "OccupationalHealthcare":
           if ("sickLeave" in entry ) {
-            // newEntry = Object.defineProperty(newEntry, "sickLeave", parseSickLeave(entry.sickLeave));
             newEntry.sickLeave = parseSickLeave(entry.sickLeave);
-
           }
-
         if ("employerName" in entry && isString(entry.employerName)) {
-          // return Object.defineProperty(newEntry, "employerName", entry.employerName) as NewEntry;
           newEntry.employerName = entry.employerName;
           console.log(newEntry);
           return newEntry as NewEntry;
@@ -183,7 +173,7 @@ export const toNewEntry = (entry: unknown): NewEntry => {
         break;
     }
   }
-  throw new Error("Incorrect or missing data");
+  throw new Error("Incorrect or missing required data fields");
 };
 
 const parseDescription = (description: unknown) => {
@@ -198,6 +188,10 @@ const parseHealthCheckRating = (rating: unknown) => {
       throw new Error("Missing health check rating");
     }
 
+  if (!isNumber(rating)) {
+    throw new Error(`Healthcheck rating should be a number`);
+  }
+
     switch (rating) {
       case 0:
         return HealthCheckRating.Healthy;
@@ -208,7 +202,7 @@ const parseHealthCheckRating = (rating: unknown) => {
       case 3:
         return HealthCheckRating.CriticalRisk;
       default:
-        throw new Error("Health check rating not recognized");
+        throw new Error(`Health check rating must be between 0 and 3. Incorrect value: ${rating}`);
     }
 };
 
@@ -242,7 +236,7 @@ const parseSickLeave = (sickLeave: unknown) => {
 
 const parseSpecialist = (specialist: unknown) => {
   if (!specialist || !isString(specialist)) {
-    return new Error("Invalid or missing specialist");
+    throw new Error("Invalid or missing specialist");
   }
   return specialist;
 };

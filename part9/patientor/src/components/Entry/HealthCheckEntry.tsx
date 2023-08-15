@@ -20,9 +20,7 @@ const HealthCheckEntry = (props: {
     if ("healthCheckRating" in props.entry) {
         return getHeart(props.entry.healthCheckRating)
     }
-
     return null;
-
 }
 
 export default HealthCheckEntry;

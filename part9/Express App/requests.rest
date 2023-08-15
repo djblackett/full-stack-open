@@ -1,0 +1,8 @@
+http://localhost:3000/api/patients/d2773336-f723-11e9-8f0b-362b9e155667/entries
+Content-Type: application/json
+{"description": "A cool description",
+  "date": "today",
+  "specialist": "Dr. Foreman",
+  "type": "HealthCheck",
+  "healthCheckRating": 3
+}

@@ -1,7 +1,8 @@
-import express from "express";
+import express, { Request, Response} from "express";
 import patientService from "../services/patientService";
 import {NonSensitivePatientEntry, Patient} from "../types";
 import toNewPatientEntry, {toNewEntry} from "../utils";
+import myErrorHandler from "./helpers/helpers";
 
 const router = express.Router();
 
@@ -23,11 +24,20 @@ router.post("/api/patients", (req, res) => {
   res.json(patient);
 });
 
-router.post("/api/patients/:id/entries", (req, res) => {
-  const newEntry = toNewEntry(req.body);
-  const id = req.params.id;
-  const entry = patientService.addEntry(newEntry, id);
-  res.json(entry);
+
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+router.post("/api/patients/:id/entries", (req: Request, res: Response) => {
+    try {
+        const newEntry = toNewEntry(req.body);
+        const id: string = req.params.id;
+        const entry = patientService.addEntry(newEntry, id);
+        res.json(entry);
+    } catch (err: unknown) {
+        myErrorHandler(err, res);
+    }
 });
+
+
 
 export default router;

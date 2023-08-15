@@ -17,7 +17,7 @@ const chooseTypeIcon = (entry: Entry) => {
   }
 }
 const EntryView = (props: { entry: Entry, diagnoses?: Diagnosis[] }) => {
-  console.log(props.entry);
+  // console.log(props.entry);
   return (
     <Box border={1} borderRadius="12px" padding={2} marginTop={1} bgcolor={"cream"} boxShadow={3}>
       {chooseTypeIcon(props.entry)}
