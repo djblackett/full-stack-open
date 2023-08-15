@@ -7,8 +7,10 @@ import {Box, Table, Button, TableHead, Typography, TableCell, TableRow, TableBod
 import MaleIcon from '@mui/icons-material/Male';
 import FemaleIcon from '@mui/icons-material/Female';
 import EntryForm from "./EntryForm";
+
 const PatientView = (props: {
-    diagnoses?: Diagnosis[]
+    diagnoses?: Diagnosis[],
+    diagnosisCodes?: string[]
 }) => {
     const {id} = useParams();
     const [patient, setPatient] = useState<Patient | null>(null)
@@ -16,9 +18,10 @@ const PatientView = (props: {
     useEffect(() => {
         const fetchPatient = async () => {
             if (id) {
-            const patient = await patients.getById(id)
-            setPatient(patient)
-        }}
+                const patient = await patients.getById(id)
+                setPatient(patient)
+            }
+        }
         void fetchPatient()
     }, [])
 
@@ -26,32 +29,25 @@ const PatientView = (props: {
         return (
             <Box>
                 <div style={{display: "flex", alignItems: "center"}}>
-                <Typography variant="h3" marginTop={5}>{patient.name}</Typography>
-                {patient.gender == "male" ? <MaleIcon sx={{marginLeft: "20px", marginTop: "40px"}}/> : <FemaleIcon sx={{marginLeft: "20px", marginTop: "40px"}}/>}
+                    <Typography variant="h3" marginTop={5}>{patient.name}</Typography>
+                    {patient.gender == "male" ? <MaleIcon sx={{marginLeft: "20px", marginTop: "40px"}}/> :
+                        <FemaleIcon sx={{marginLeft: "20px", marginTop: "40px"}}/>}
                 </div>
                 <List>
-                <ListItem>Occupation: {patient.occupation}</ListItem>
+                    <ListItem>Occupation: {patient.occupation}</ListItem>
 
-                <ListItem>SSH: {patient.ssn}</ListItem>
-                <ListItem>Date of Birth: {patient.dateOfBirth}</ListItem>
+                    <ListItem>SSH: {patient.ssn}</ListItem>
+                    <ListItem>Date of Birth: {patient.dateOfBirth}</ListItem>
                 </List>
-                <EntryForm patientId={id} patient={patient} setPatient={setPatient}/>
+                <EntryForm patientId={id} patient={patient} setPatient={setPatient}
+                           diagnosisCodes={props.diagnosisCodes}/>
                 <Typography variant="h5" marginTop={3}>Entries:</Typography>
-                    <List>{patient.entries && patient.entries.map(entry => <ListItem key={entry.id}><EntryView entry={entry} diagnoses={props.diagnoses}/></ListItem>)}</List>
+                <List>{patient.entries && patient.entries.map(entry => <ListItem key={entry.id}><EntryView entry={entry}
+                                                                                                           diagnoses={props.diagnoses}/></ListItem>)}</List>
             </Box>
         )
     } else {
         return null
     }
 }
-
-// export interface Patient {
-//     id: string;
-//     name: string;
-//     occupation: string;
-//     gender: Gender;
-//     ssn?: string;
-//     dateOfBirth?: string;
-// }
-
 export default PatientView;

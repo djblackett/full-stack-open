@@ -10,11 +10,11 @@ export enum Gender {
   Other = "other"
 }
 
-// export interface Entry {
-//   diagnosisCodes: any;
-//   description: any;
-//   date: any;
-// }
+export interface ButtonState {
+  healthcheck: boolean,
+  hospital: boolean,
+  occupational: boolean
+}
 
 export interface Patient {
   id: string;
@@ -71,3 +71,16 @@ export type Entry =
     |  HealthCheckEntry
     | HospitalEntry
     | OccupationalHealthcareEntry;
+
+type UnionOmit<T, K extends string | number | symbol> = T extends unknown ? Omit<T, K> : never;
+// Define Entry without the 'id' property
+
+// type EntryWithoutId = UnionOmit<Entry, 'id'>;
+type OccupationalHealthcareEntryNoId = UnionOmit<OccupationalHealthcareEntry, 'id'>;
+type HealthCheckEntryNoId = UnionOmit<HealthCheckEntry, 'id'>;
+type HospitalEntryNoId = UnionOmit<HospitalEntry, 'id'>;
+
+export type NewEntry =
+    | OccupationalHealthcareEntryNoId
+    | HealthCheckEntryNoId
+    | HospitalEntryNoId;

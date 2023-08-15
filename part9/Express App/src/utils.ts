@@ -34,10 +34,6 @@ const isString = (text: unknown): text is string => {
   return typeof text === "string" || text instanceof String;
 };
 
-const isNumber = (text: unknown) => {
-  return typeof text === "number" || text instanceof Number;
-};
-
 const parseName = (name: unknown): string => {
   if (!name || !isString(name)) {
     throw new Error("Incorrect or missing name");
@@ -114,7 +110,6 @@ const parseDiagnosisCodes = (object: unknown): Array<Diagnosis['code']> =>  {
     // we will just trust the data to be in correct form
     return [] as Array<Diagnosis['code']>;
   }
-
   return object.diagnosisCodes as Array<Diagnosis['code']>;
 };
 
@@ -131,7 +126,7 @@ export const toNewEntry = (entry: unknown): NewEntry => {
       "specialist" in entry
   ) {
 
-    let newEntry: TypeKeyEntry = {
+    const newEntry: TypeKeyEntry = {
       type: parseType(entry.type),
       description: parseDescription(entry.description),
       date: parseDate(entry.date),
@@ -141,7 +136,7 @@ export const toNewEntry = (entry: unknown): NewEntry => {
 
 
     if ("diagnosisCodes" in entry) {
-      newEntry = Object.defineProperty(newEntry, "diagnosisCodes", {value: parseDiagnosisCodes(entry.diagnosisCodes)});
+      newEntry.diagnosisCodes = parseDiagnosisCodes(entry);
     }
 
     switch (entry.type) {
@@ -156,7 +151,7 @@ export const toNewEntry = (entry: unknown): NewEntry => {
         break;
       case "HealthCheck":
         if ("healthCheckRating" in entry) {
-          newEntry.healthCheckRating = parseHealthCheckRating(Number(entry.healthCheckRating));
+          newEntry.healthCheckRating = parseHealthCheckRating(entry.healthCheckRating);
           console.log(newEntry);
           return newEntry as NewEntry;
         }
@@ -165,8 +160,8 @@ export const toNewEntry = (entry: unknown): NewEntry => {
           if ("sickLeave" in entry ) {
             newEntry.sickLeave = parseSickLeave(entry.sickLeave);
           }
-        if ("employerName" in entry && isString(entry.employerName)) {
-          newEntry.employerName = entry.employerName;
+        if ("employerName" in entry) {
+          newEntry.employerName = parseEmployerName(entry.employerName);
           console.log(newEntry);
           return newEntry as NewEntry;
         }
@@ -176,6 +171,12 @@ export const toNewEntry = (entry: unknown): NewEntry => {
   throw new Error("Incorrect or missing required data fields");
 };
 
+const parseEmployerName = (employerName: unknown) => {
+  if (!employerName || !isString(employerName) || employerName === "") {
+    throw new Error("Missing or invalid employer name");
+  }
+  return employerName;
+};
 const parseDescription = (description: unknown) => {
   if (!description || !isString(description)) {
     throw new Error("Invalid or missing description");
@@ -184,14 +185,12 @@ const parseDescription = (description: unknown) => {
 };
 
 const parseHealthCheckRating = (rating: unknown) => {
-    if (!rating) {
-      throw new Error("Missing health check rating");
+    console.log(typeof rating);
+    if (!rating && !isString(rating)) {
+      throw new Error("Missing or invalid health check rating. Make sure input is a number between 0 and 3");
     }
 
-  if (!isNumber(rating)) {
-    throw new Error(`Healthcheck rating should be a number`);
-  }
-
+  if (Number(rating)) {
     switch (rating) {
       case 0:
         return HealthCheckRating.Healthy;
@@ -204,6 +203,8 @@ const parseHealthCheckRating = (rating: unknown) => {
       default:
         throw new Error(`Health check rating must be between 0 and 3. Incorrect value: ${rating}`);
     }
+  }
+  throw new Error("Health check rating error");
 };
 
 const parseDischarge = (discharge: unknown) => {
@@ -212,7 +213,11 @@ const parseDischarge = (discharge: unknown) => {
   }
   if (
       "date" in discharge &&
-      "criteria" in discharge
+      "criteria" in discharge &&
+      isString(discharge.date) &&
+      isString(discharge.criteria) &&
+      discharge.date !== "" &&
+      discharge.criteria !== ""
   ) {
     return discharge;
   }
@@ -223,13 +228,19 @@ const parseSickLeave = (sickLeave: unknown) => {
   if (!sickLeave || typeof sickLeave !== "object") {
     throw new Error("Invalid or missing sickLeave object");
   }
+
   if (
       "startDate" in sickLeave &&
       "endDate" in sickLeave &&
       isString(sickLeave.startDate) &&
-      isString(sickLeave.endDate)
-  ) {
-    return sickLeave;
+      isString(sickLeave.endDate)) {
+
+      if (sickLeave.startDate !== "" &&
+        sickLeave.endDate !== "")  {
+        return sickLeave;
+      } else if (sickLeave.startDate === "" && sickLeave.endDate === "") {
+        return null;
+      }
   }
   throw new Error("Invalid sickLeave object");
 };
