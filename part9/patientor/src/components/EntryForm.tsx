@@ -6,7 +6,6 @@ import EntryError from "./EntryError";
 import EntryFormView from "./EntryFormView";
 import dayjs, {Dayjs} from "dayjs";
 
-
 const EntryForm = (props: {
     patientId?: string,
     patient: Patient,
@@ -21,7 +20,6 @@ const EntryForm = (props: {
     });
 
     const [selectedCodes, setSelectedCodes] = useState<Array<string>>([]);
-
     const [datePicker, setDatePicker] = useState<Dayjs | null>(dayjs());
     const [dateDischarge, setDateDischarge] = useState<Dayjs | null>(dayjs());
     const [sickLeaveStart, setSickLeaveStart] = useState<Dayjs | null>(dayjs());
@@ -35,7 +33,6 @@ const EntryForm = (props: {
         const healthCheckRating = document.getElementById("healthCheckRating") as HTMLInputElement;
         const criteria = document.getElementById("criteria") as HTMLInputElement;
         const employerName = document.getElementById("employerName") as HTMLInputElement;
-
 
         const getEntryType = (state: ButtonState) => {
             if (state.occupational) {
@@ -82,10 +79,21 @@ const EntryForm = (props: {
                         ...props.patient.entries, data
                     ]
                 });
+                resetForm();
             } else {
                 setErrorMessage(response.data)
             }
         }
+    }
+
+    const resetForm = () => {
+        const form = document.getElementById("entryForm") as HTMLFormElement;
+        form.reset();
+        setSelectedCodes([]);
+        setDateDischarge(dayjs());
+        setSickLeaveEnd(dayjs());
+        setSickLeaveStart(dayjs);
+        setDatePicker(dayjs());
     }
 
     return <EntryFormView errorMessage={errorMessage} submit={submit} buttonState={buttonState}

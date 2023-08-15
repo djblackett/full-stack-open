@@ -24,9 +24,6 @@ router.post("/api/patients", (req, res) => {
   res.json(patient);
 });
 
-
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 router.post("/api/patients/:id/entries", (req: Request, res: Response) => {
     try {
         const newEntry = toNewEntry(req.body);
@@ -37,7 +34,5 @@ router.post("/api/patients/:id/entries", (req: Request, res: Response) => {
         myErrorHandler(err, res);
     }
 });
-
-
 
 export default router;
