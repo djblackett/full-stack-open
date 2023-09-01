@@ -1,8 +1,10 @@
-const Author = require("./models/authorSchema");
-const Book = require("./models/bookSchema");
+const Author = require("../Models/Author");
+const Book = require("../Models/Book");
 const { GraphQLError } = require("graphql/error");
-const User = require("./models/userSchema");
+const User = require("../Models/User");
 const jwt = require("jsonwebtoken");
+const { PubSub } = require("graphql-subscriptions");
+const pubsub = new PubSub();
 
 
 const resolvers = {
@@ -10,48 +12,67 @@ const resolvers = {
     author: async (authorId) => Author.findById(authorId).exec(),
     bookCount: () => Book.collection.countDocuments(),
     authorCount: () => Author.collection.countDocuments(),
-    allBooks: async (_, { author, genre }, context) => {
+    allBooks: async (_, { author, genre },) => {
 
       if (!author && !genre) {
         console.log("No params:");
         const booksNoParams = await Book.find({}).populate("author").exec();
-        console.log(booksNoParams);
+        // console.log(booksNoParams);
         return booksNoParams;
-      } else if (!genre ) {
+      } else if (!genre) {
         console.log("Author no genre");
         const getAuthor = await Author.findOne({ name: author }).exec();
-        const authorBooks = await Book.find({ author: getAuthor } ).populate("author").exec();
-        console.log(authorBooks);
+        const authorBooks = await Book.find({ author: getAuthor }).populate("author").exec();
+        // console.log(authorBooks);
         return authorBooks;
       } else if (!author) {
         console.log("In the genre filter");
         const filteredByGenre = await Book.find({ genres: genre }).populate("author").exec();
-        console.log(filteredByGenre);
+        // console.log(filteredByGenre);
         return filteredByGenre;
       }
       //todo finish this below
       const getAuthor = await Author.findOne({ name: author }).exec();
-      return Book.find({ author: getAuthor , genres: genre }).populate("author").exec();
+      return Book.find({ author: getAuthor, genres: genre }).populate("author").exec();
     },
     allAuthors: async () => {
-      const authorsArr = await Author.find();
-      console.log(authorsArr);
+      // The n + 1 problem is avoided by querying for all th authors and books
+      // and then constructing the book count from those 2 results
+      const authorsArr = await Author.find().exec();
+      const booksArr = await Book.find().exec();
+      // console.log(authorsArr);
+      // console.log(booksArr);
+      console.log("all authors query called");
 
-      const result = authorsArr.map(async author => {
-        console.log(author);
-        const authorBookCount = await Book.find({ author: author._id }).countDocuments();
-        console.log("authorBookCount:", authorBookCount);
-        return { ...author, bookCount: authorBookCount };
+      const result = authorsArr.map(author => {
+        // console.log(author);
+
+        const authorBookCount = booksArr.filter(book => {
+          // console.log("book.author:", book.author);
+          // console.log("author:", author)
+          return book.author.toString() === author.id.toString();
+        });
+
+        // console.log("authorBookCount:", authorBookCount);
+        return { id: author.id, name: author.name, born: author.born, bookCount: authorBookCount.length };
       });
-      console.log(result);
-      return authorsArr;
+      // console.log("result from author stuff");
+      // console.log(result);
+      return result;
     },
     me: (root, args, context) => context.currentUser
 
   },
+  // Author: {
+  //   bookCount: async (root) => {
+  //     const books = await Book.find({ author: root._id });
+  //     return books.length;
+  //   }
+  // },
   Mutation: {
     addBook: async (root, args, context) => {
 
+      console.log(context);
       if (!context.currentUser) {
         throw new GraphQLError("User must be logged in to add book");
       }
@@ -85,8 +106,10 @@ const resolvers = {
           }
         });
       }
-      const author = await Author.findOne( { name: args.author });
+      const author = await Author.findOne({ name: args.author });
       // console.log(author);
+
+      let newBook;
 
       try {
         if (!author) {
@@ -94,9 +117,16 @@ const resolvers = {
           // console.log(newAuthor);
           const savedAuthor = await newAuthor.save();
           // console.log(savedAuthor);
-          return new Book({ ...args, author: savedAuthor }).save();
+          newBook = await new Book({ ...args, author: savedAuthor });
+        } else {
+          newBook = await new Book({ ...args, author: author });
         }
-        return new Book({ ...args, author: author }).save();
+
+        await newBook.save();
+        await pubsub.publish("BOOK_ADDED", { bookAdded: newBook });
+        return newBook;
+
+
       } catch (error) {
         throw new GraphQLError("Saving book failed", {
           extensions: {
@@ -153,7 +183,7 @@ const resolvers = {
     login: async (root, args) => {
       const user = await User.findOne({ username: args.username });
 
-      if ( !user || args.password !== "secret" ) {
+      if (!user || args.password !== "secret") {
         throw new GraphQLError("wrong credentials", {
           extensions: {
             code: "BAD_USER_INPUT"
@@ -168,6 +198,17 @@ const resolvers = {
 
       return { value: jwt.sign(userForToken, process.env.JWT_SECRET) };
     }
+  },
+  Subscription: {
+    bookAdded: {
+      subscribe: async () => await pubsub.asyncIterator("BOOK_ADDED"),
+      resolve: (payload) => {
+        console.log("We are in the resolve function");
+        console.log("payload:", payload);
+        console.log("Book added:", payload.bookAdded);
+        return payload.bookAdded;
+      },
+    },
   }
 };
 
