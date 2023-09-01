@@ -31,7 +31,7 @@ const resolvers = {
         // console.log(filteredByGenre);
         return filteredByGenre;
       }
-      //todo finish this below
+
       const getAuthor = await Author.findOne({ name: author }).exec();
       return Book.find({ author: getAuthor, genres: genre }).populate("author").exec();
     },
@@ -40,35 +40,24 @@ const resolvers = {
       // and then constructing the book count from those 2 results
       const authorsArr = await Author.find().exec();
       const booksArr = await Book.find().exec();
-      // console.log(authorsArr);
-      // console.log(booksArr);
+
       console.log("all authors query called");
 
       const result = authorsArr.map(author => {
         // console.log(author);
 
         const authorBookCount = booksArr.filter(book => {
-          // console.log("book.author:", book.author);
-          // console.log("author:", author)
           return book.author.toString() === author.id.toString();
         });
 
         // console.log("authorBookCount:", authorBookCount);
         return { id: author.id, name: author.name, born: author.born, bookCount: authorBookCount.length };
       });
-      // console.log("result from author stuff");
-      // console.log(result);
       return result;
     },
     me: (root, args, context) => context.currentUser
 
   },
-  // Author: {
-  //   bookCount: async (root) => {
-  //     const books = await Book.find({ author: root._id });
-  //     return books.length;
-  //   }
-  // },
   Mutation: {
     addBook: async (root, args, context) => {
 
@@ -154,7 +143,6 @@ const resolvers = {
       }
       try {
         const author = await Author.findOneAndUpdate({ name: args.name }, { born: args.setBornTo }, { new: true });
-        // console.log(author);
         return author;
       } catch (error) {
         throw new GraphQLError("Updating author failed", {
@@ -202,12 +190,6 @@ const resolvers = {
   Subscription: {
     bookAdded: {
       subscribe: async () => await pubsub.asyncIterator("BOOK_ADDED"),
-      resolve: (payload) => {
-        console.log("We are in the resolve function");
-        console.log("payload:", payload);
-        console.log("Book added:", payload.bookAdded);
-        return payload.bookAdded;
-      },
     },
   }
 };

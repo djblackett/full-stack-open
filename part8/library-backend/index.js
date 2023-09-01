@@ -74,7 +74,7 @@ const start = async () => {
       console.log(`Server is now running on http://localhost:${PORT}`)
     );
   } catch (error) {
-    console.log("Server error *********************************************");
+    console.log("Server error:");
     console.log(error);
   }
 
